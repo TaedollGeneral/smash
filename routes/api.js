@@ -13,12 +13,12 @@
 const express = require('express');
 const router = express.Router();              // Express의 라우터 시스템 사용
 const db = require('../config/db');           // 데이터베이스 연결 객체 로드
-const { checkTimeParams } = require('../utils/validator'); // 시간 검증 유틸리티 로드
 const fs = require('fs');                     // 파일 읽기용 모듈
 const path = require('path');                 // 경로 조작용 도구
 
 // validator 호출
 const { checkTimeParams, checkMasterAuth, checkUserAuth } = require('../utils/validator');
+
 // 현재 파일 기준 상위 폴더의 config/config.json 경로 설정
 const configPath = path.join(__dirname, '..', 'config', 'config.json');
 
