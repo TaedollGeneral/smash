@@ -157,20 +157,28 @@ async function copyCurrentStatus() {
         }
 
         if (currentDay === 'WED' && allLessons.length > 0) {
-            text += `📍레슨\n\n`;
-            text += activeLessons.map((item, idx) => {
-                const name = item.user_name || item.student_id;
-                const startMin = 18 * 60;
-                const myTimeMin = startMin + (idx * 15);
-                const h = Math.floor(myTimeMin / 60);
-                const m = myTimeMin % 60;
-                const timeLabel = `${h}:${m.toString().padStart(2, '0')}`;
-                
-                return `${idx + 1}. ${name} (${timeLabel})`;
-            }).join('\n');            
-            text += '\n';
-        }
+            // [수정 포인트 1] 21시 이전 인원만 필터링하여 activeLessons 정의
+            const activeLessons = allLessons.filter((item, idx) => {
+                const startMin = 18 * 60; // 18:00 시작
+                return (startMin + (idx * 15)) < (21 * 60); // 21:00 미만인 사람만 남김
+            });
 
+            // [수정 포인트 2] 필터링된 인원이 있을 때만 출력
+            if (activeLessons.length > 0) {
+                text += `📍레슨\n\n`;
+                text += activeLessons.map((item, idx) => {
+                    const name = item.user_name || item.student_id;
+                    const startMin = 18 * 60;
+                    const myTimeMin = startMin + (idx * 15); // 순서에 따른 시간 계산
+                    const h = Math.floor(myTimeMin / 60);
+                    const m = myTimeMin % 60;
+                    const timeLabel = `${h}:${m.toString().padStart(2, '0')}`;
+                    
+                    return `${idx + 1}. ${name} (${timeLabel})`;
+                }).join('\n');            
+                text += '\n';
+            }
+        }
 
         const finalText = text.trim();
 
