@@ -143,6 +143,15 @@ function selectDay(day, element) {
     // 모든 버튼에서 active 클래스 제거 후 클릭된 버튼에만 추가
     document.querySelectorAll('.day-btn').forEach(btn => btn.classList.remove('active'));
     element.classList.add('active');
+
+    // --- [추가] 금요일 레슨 판넬 제어 ---
+    const lessonPanel = document.getElementById('lesson-panel');
+    if (day === 'FRI') {
+        lessonPanel.classList.add('hidden'); // 금요일이면 숨김
+    } else {
+        lessonPanel.classList.remove('hidden'); // 수요일이면 다시 노출
+    }
+
     // 바뀐 요일의 데이터를 즉시 불러옴
     fetchStatus(); 
 }
@@ -312,3 +321,15 @@ function updateTitle() {
 }
 
 updateTitle();
+
+
+
+
+//아코디언 코드
+function toggleAccordion(panelId) {
+    // 모바일 환경(너비 768px 이하)일 때만 아코디언 작동
+    if (window.innerWidth <= 768) {
+        const panel = document.getElementById(panelId);
+        panel.classList.toggle('collapsed');
+    }
+}

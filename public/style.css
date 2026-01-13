@@ -266,4 +266,32 @@ h3 { margin: 0 0 10px 0; font-size: 16px; border-bottom: 2px solid #007bff; disp
         grid-template-columns: 1fr 1fr 1.2fr;
         gap: 5px;
     }
+    
+    /* 아코디언 헤더 디자인 */
+    .accordion-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+        padding: 5px 0;
+    }
+
+    /* 접혔을 때의 상태 */
+    .accordion-item.collapsed .accordion-content {
+        display: none; /* 내용 숨김 */
+    }
+
+    .accordion-item.collapsed .arrow {
+        transform: rotate(180deg); /* 화살표 뒤집기 */
+    }
+
+    /* 금요일 레슨 패널 원천 숨김 클래스 */
+    .hidden {
+        display: none !important;
+    }
+
+    /* 펼쳐진 판넬이 화면을 꽉 채우도록 높이 조정 */
+    .accordion-item {
+        transition: all 0.3s ease;
+    }
 }

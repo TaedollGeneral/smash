@@ -30,32 +30,50 @@
     </div>
 
     <div class="dashboard-area">
-        <div class="left-panel">
-            <h3>🏸 운동</h3>
-            <table>
-                <thead><tr><th>No</th><th>이름</th><th>신청시간</th></tr></thead>
-                <tbody id="exercise-list">
-                    </tbody>
-            </table>
+        <div class="left-panel accordion-item" id="exercise-panel">
+            <div class="accordion-header" onclick="toggleAccordion('exercise-panel')">
+                <h3>🏸 운동 명단</h3>
+                <span class="arrow">▲</span>
+            </div>
+            <div class="accordion-content">
+                <table>
+                    <thead>
+                        <tr><th>No</th><th>이름</th><th>신청시간</th></tr>
+                    </thead>
+                    <tbody id="exercise-list"></tbody>
+                </table>
+            </div>
         </div>
 
         <div class="right-panel-wrapper">
-            <div class="sub-panel">
-                <h3>😊 게스트</h3>
-                <table>
-                    <thead><tr><th>No</th><th>이름</th><th>신청자</th></tr></thead>
-                    <tbody id="guest-list">
-                    </tbody>
-                </table>
+            <div class="sub-panel accordion-item" id="guest-panel">
+                <div class="accordion-header" onclick="toggleAccordion('guest-panel')">
+                    <h3>😊 게스트</h3>
+                    <span class="arrow">▲</span>
+                </div>
+                <div class="accordion-content">
+                    <table>
+                        <thead>
+                            <tr><th>No</th><th>이름</th><th>신청자</th></tr>
+                        </thead>
+                        <tbody id="guest-list"></tbody>
+                    </table>
+                </div>
             </div>
 
-            <div class="sub-panel">
-                <h3>🎓 레슨</h3>
-                <table>
-                    <thead><tr><th>No</th><th>이름</th><th>레슨시간</th></tr></thead>
-                    <tbody id="lesson-list">
-                    </tbody>
-                </table>
+            <div class="sub-panel accordion-item" id="lesson-panel">
+                <div class="accordion-header" onclick="toggleAccordion('lesson-panel')">
+                    <h3>🎓 레슨 명단</h3>
+                    <span class="arrow">▲</span>
+                </div>
+                <div class="accordion-content">
+                    <table>
+                        <thead>
+                            <tr><th>No</th><th>이름</th><th>레슨시간</th></tr>
+                        </thead>
+                        <tbody id="lesson-list"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
