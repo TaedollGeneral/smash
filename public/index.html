@@ -131,8 +131,18 @@
             <button onclick="closeAdminMode()" style="background:none; border:none; font-size:20px; cursor:pointer;">✕</button>
         </div>
         <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
+        
+        <div class="admin-inputs" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <label style="font-size: 14px; font-weight: bold; width: 70px; color: #333;">📌 정원:</label>
+                <input type="number" id="max-capacity" placeholder="예: 60" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+            </div>
+        </div>
+
         <div class="admin-actions">
-            <button onclick="copyCurrentStatus()">📋 카톡 공지용 명단 복사</button>
+            <button onclick="copyCurrentStatus()" style="background-color: #28a745; width: 100%; padding: 12px; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">
+                📋 계산된 명단 복사
+            </button>
         </div>
     </div>
 

@@ -36,78 +36,121 @@ function closeAdminMode() {
 }
 
 /**
- * 5. 카톡 공지용 명단 복사 함수
+ * 5. 날짜 계산기 함수
+ * 현재 주차(week)와 선택된 요일(currentDay)을 바탕으로 실제 날짜를 반환함
+ */
+function getTargetDate(week, day) {
+    // 1. 학기 시작일 설정 (2026년 1주차 월요일: 1월 5일)
+    // 이 날짜는 학기가 바뀔 때마다 여기서 한 번만 수정하면 돼!
+    const startDate = new Date("2026-01-05"); 
+
+    // 2. 주차에 따른 일수 계산: (주차 - 1) * 7일
+    const daysFromWeek = (week - 1) * 7;
+
+    // 3. 요일에 따른 보정치 계산
+    const dayOffset = (day === 'WED') ? 2 : 4;
+
+    // 4. 최종 날짜 계산
+    const targetDate = new Date(startDate);
+    targetDate.setDate(startDate.getDate() + daysFromWeek + dayOffset);
+
+    // 5. 결과 포맷팅 (예: 1/14 수요일)
+    const month = targetDate.getMonth() + 1;
+    const date = targetDate.getDate();
+    const dayName = (day === 'WED') ? '수요일' : '금요일';
+
+    return `${month}/${date} ${dayName}`;
+}
+
+
+
+/**
+ * 6. 카톡 공지용 명단 복사 함수
  * script.js에 있는 currentDay 변수를 그대로 사용하여 현재 화면의 명단을 가공함
  */
 async function copyCurrentStatus() {
     try {
-        // 1. 서버 데이터 가져오기 (currentDay 변수 공유)
-        const response = await fetch(`/api/status?day=${currentDay}`);
-        const data = await response.json();
+        const [infoRes, statusRes] = await Promise.all([
+            fetch('/api/info'),
+            fetch(`/api/status?day=${currentDay}`)
+        ]);
+        const info = await infoRes.json();
+        const data = await statusRes.json();
         
         if (!data || data.length === 0) {
-            alert("⚠️ 현재 신청된 명단이 없습니다.");
+            alert("⚠️ 신청자가 없습니다.");
             return;
         }
 
-        const today = new Date();
-        const dateStr = `${today.getMonth() + 1}/${today.getDate()}`;
-        const dayName = currentDay === 'WED' ? '수요일' : '금요일';
-        
-        let text = `🏸 SMASH ${dateStr}(${dayName}) 운동 명단\n\n`;
-        const categories = { exercise: "🏃 정회원", guest: "😊 게스트", lesson: "🎓 레슨" };
+        const dateTitle = getTargetDate(info.week, currentDay);
+        const maxCap = parseInt(document.getElementById('max-capacity').value) || 0;
 
-        Object.keys(categories).forEach(key => {
-            const list = data.filter(item => item.category === key);
-            if (list.length > 0) {
-                text += `[${categories[key]} - ${list.length}명]\n`;
-                text += list.map((item, idx) => {
-                    const name = item.user_name || item.student_id;
-                    return key === 'guest' ? `${idx + 1}. ${item.guest_name}(${name})` : `${idx + 1}. ${name}`;
-                }).join('\n');
-                text += '\n\n';
-            }
-        });
+        // --- [핵심: 정원 필터링 로직] ---
+        const allMembers = data.filter(item => item.category === 'exercise');
+        const allGuests = data.filter(item => item.category === 'guest');
+        const allLessons = data.filter(item => item.category === 'lesson');
+
+        // 1. 정회원 우선 확정
+        const finalMembers = maxCap > 0 ? allMembers.slice(0, maxCap) : allMembers;
+        
+        // 2. 게스트 채우기 (남는 자리가 있을 때만)
+        const remainingSeats = maxCap > 0 ? maxCap - finalMembers.length : 999;
+        const finalGuests = remainingSeats > 0 ? allGuests.slice(0, remainingSeats) : [];
+
+        // 3. 잔여석 계산
+        const lastEmptySeats = maxCap > 0 ? (maxCap - (finalMembers.length + finalGuests.length)) : 0;
+
+        // --- [텍스트 조립 시작] ---
+        let text = `📌${dateTitle} 운동 명단\n\n`;
+
+        // 정회원 출력 (한 줄에 5명씩 예쁘게)
+        if (finalMembers.length > 0) {
+            finalMembers.forEach((item, idx) => {
+                const name = item.user_name || item.student_id;
+                text += name.padEnd(5, ' '); // 띄어쓰기 정렬
+                if ((idx + 1) % 5 === 0) text += '\n';
+            });
+            text += '\n\n';
+        }
+
+        // 임원진 섹션 (임원진 로직은 일단 별도 분류 없으므로 제목만 표시하거나 필요시 추가)
+        // 여기서는 예시 양식에 맞춰 게스트와 레슨만 추가함
+        
+        if (finalGuests.length > 0) {
+            text += `📍게스트\n`;
+            text += finalGuests.map((item, idx) => `${idx + 1}. ${item.guest_name}(${item.user_name || item.student_id})`).join('\n');
+            text += '\n\n';
+        }
+
+        if (allLessons.length > 0) {
+            text += `📍레슨\n`;
+            text += allLessons.map((item, idx) => `${idx + 1}. ${item.user_name || item.student_id}`).join('\n');
+            text += '\n\n';
+        }
+
+        if (maxCap > 0) {
+            text += `( 잔여석 : ${lastEmptySeats} )\n\n`;
+        }
 
         text += `신청: ${window.location.origin}`;
         const finalText = text.trim();
 
-        // 2. [핵심 수정] 복사 로직 순서 변경 및 안전장치 강화
-        // 최신 API가 확실히 존재할 때만 사용 (navigator.clipboard 객체 체크)
+        // --- 복사 실행 ---
         if (window.isSecureContext && navigator.clipboard && navigator.clipboard.writeText) {
             await navigator.clipboard.writeText(finalText);
-            alert("📋 명단이 복사되었습니다!");
+            alert("📋 정원 계산된 명단이 복사되었습니다!");
         } else {
-            // HTTPS가 아니거나 최신 API가 없는 경우 (IP 접속 환경 등)
             const textArea = document.createElement("textarea");
             textArea.value = finalText;
-            
-            // 화면에 안 보이게 숨기기
-            textArea.style.position = "fixed";
-            textArea.style.left = "-9999px";
-            textArea.style.top = "0";
             document.body.appendChild(textArea);
-            
-            textArea.focus();
             textArea.select();
-            
-            try {
-                // 구식 복사 명령 실행 (줄 그어져 있어도 작동함)
-                const successful = document.execCommand('copy');
-                if (successful) {
-                    alert("📋 명단이 복사되었습니다! (보안 우회 모드)");
-                } else {
-                    throw new Error('복사 명령 실패');
-                }
-            } catch (err) {
-                alert("❌ 브라우저 차단으로 복사에 실패했습니다. 수동으로 복사해주세요.");
-            }
-            
+            document.execCommand('copy');
             document.body.removeChild(textArea);
+            alert("📋 정원 계산된 명단이 복사되었습니다! (우회)");
         }
 
     } catch (err) {
-        console.error('명단 복사 에러:', err);
-        alert("데이터 처리 중 오류가 발생했습니다.");
+        console.error(err);
+        alert("오류가 발생했습니다.");
     }
 }
