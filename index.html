@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMASH 운동 투표</title>
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="header-container">
+        <div class="left-section">
+            <div class="title-group">
+                <h2 class="title1">2026 SMASH</h2>
+                <h4 class="title"></h4> </div>
+
+            <div class="divider"></div>
+
+            <div class="timer-box">
+                <span id="status-text" class="timer-label">투표 오픈까지</span>
+                <span id="timer-display" class="timer-text text-green">00:00:00</span>
+            </div>
+        </div>
+
+        <div class="day-toggle">
+            <button class="day-btn active" onclick="selectDay('WED', this)">수</button>
+            <button class="day-btn" onclick="selectDay('FRI', this)">금</button>
+        </div>
+    </div>
+
+    <div class="dashboard-area">
+        <div class="left-panel">
+            <h3>🏸 운동</h3>
+            <table>
+                <thead><tr><th>No</th><th>이름</th><th>신청시간</th></tr></thead>
+                <tbody id="exercise-list">
+                    </tbody>
+            </table>
+        </div>
+
+        <div class="right-panel-wrapper">
+            <div class="sub-panel">
+                <h3>😊 게스트</h3>
+                <table>
+                    <thead><tr><th>No</th><th>이름</th><th>신청자</th></tr></thead>
+                    <tbody id="guest-list">
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="sub-panel">
+                <h3>🎓 레슨</h3>
+                <table>
+                    <thead><tr><th>No</th><th>이름</th><th>레슨시간</th></tr></thead>
+                    <tbody id="lesson-list">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <form action="/api/apply" method="post" class="control-panel">
+        
+        <div class="input-group">
+            <input type="text" name="id" placeholder="학번" required>
+            <input type="password" name="pwd" placeholder="비번" required>
+            <select name="category" id="category-select">
+                <option value="exercise">운동</option>
+                <option value="guest">게스트</option>
+                <option value="lesson">레슨</option>
+            </select>
+        </div>
+
+        <div class="input-group mobile-row-2">
+            <div style="display: flex; gap: 5px; white-space: nowrap;">
+                <label class="radio-label"><input type="radio" name="action" value="apply" checked>신청</label>
+                <label class="radio-label"><input type="radio" name="action" value="cancel">취소</label>
+            </div>
+            
+            <input type="text" name="name" id="guest-name-input" placeholder="이름(게스트)" style="display:none;">
+            
+            <button type="submit" class="submit-btn">확인</button>
+        </div>
+    </form>
+
+    <script src="script.js"></script>
+</body>
+</html>

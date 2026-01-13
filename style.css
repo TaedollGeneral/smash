@@ -1,0 +1,254 @@
+ /* [공통 설정] */
+        body {
+            font-family: 'Pretendard', 'Malgun Gothic', -apple-system, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 10px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+            gap: 10px; /* 요소 간 간격 일괄 적용 */
+        }
+
+        /* [1. 스마트 헤더 (NEW)] */
+        .header-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border: 1px solid #ddd;
+            flex-shrink: 0; /* 높이 줄어들지 않음 */
+        }
+
+        /* 왼쪽 구역 설정 */
+        .left-section {
+            display: flex;
+            align-items: center;
+            gap: 15px; /* 제목그룹 <-> 칸막이 <-> 타이머 사이 간격 */
+        }
+
+        /* ★ [핵심] 제목 두 줄을 감싸는 박스 */
+        .title-group {
+            display: flex;
+            flex-direction: column; /* 위아래로 쌓기 */
+            align-items: flex-start; /* 왼쪽 정렬 */
+            justify-content: center;
+            gap: 2px; /* 큰 제목과 작은 제목 사이 간격 좁게 */
+        }
+
+        /* 큰 제목 (2026 SMASH) */
+        .title1 {
+            font-size: 20px;   /* 크기 적당히 큼 */
+            font-weight: 800;  /* 아주 두껍게 */
+            color: #111827;
+            margin: 0;
+            line-height: 1.1;  /* 줄 간격 타이트하게 */
+        }
+
+        /* 작은 제목 (겨울학기 1주차) */
+        .title {
+            font-size: 13px;   /* 작게 */
+            font-weight: 400;  /* 얇게 (보통 굵기) */
+            color: #6b7280;    /* 회색 */
+            margin: 0;
+        }
+
+        /* 칸막이 (높이 조절) */
+        .divider {
+            width: 1px;
+            height: 32px;      /* 제목 덩어리 높이에 맞춰 살짝 길게 */
+            background-color: #e5e7eb;
+        }
+
+        .timer-box {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .timer-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #6b7280;
+            margin-bottom: 2px;
+        }
+
+        .timer-text {
+            font-family: monospace;
+            font-size: 18px;
+            font-weight: 700;
+            transition: color 0.3s;
+        }
+
+        /* 상태별 색상 */
+        .text-green { color: #22c55e; }
+        .text-red { color: #ef4444; animation: pulse 2s infinite; }
+        .text-gray { color: #9ca3af; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        /* 요일 버튼 */
+        .day-toggle {
+            display: flex;
+            background-color: #f3f4f6;
+            padding: 4px;
+            border-radius: 8px;
+        }
+
+        .day-btn {
+            border: none;
+            background: none;
+            padding: 6px 12px;
+            font-size: 13px;
+            font-weight: 700;
+            border-radius: 6px;
+            cursor: pointer;
+            color: #9ca3af;
+            transition: all 0.2s;
+        }
+
+        .day-btn.active {
+            background-color: white;
+            color: #2563eb;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        /* [2. 메인 대시보드 (현황판)] */
+        .dashboard-area {
+            display: flex;
+            flex: 1; /* 남은 공간 모두 차지 */
+            gap: 10px;
+            min-height: 0;
+            overflow: hidden; /* 내부 스크롤을 위해 */
+        }
+
+        .left-panel, .sub-panel {
+            background-color: white;
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            overflow-y: auto;
+            border: 1px solid #ddd;
+        }
+
+        .left-panel { flex: 1.5; }
+        .right-panel-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .sub-panel { flex: 1; }
+
+        /* [3. 하단 컨트롤 패널] */
+        .control-panel {
+            background-color: #333;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        input[type="text"], input[type="password"] {
+            padding: 6px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 80px;
+            font-size: 14px;
+        }
+
+        select {
+            padding: 6px;
+            border-radius: 4px;
+        }
+        
+        .radio-label {
+            font-size: 14px;
+            margin-right: 5px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .submit-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 6px 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        /* [4. 테이블 스타일] */
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th {
+            background-color: #f8f9fa;
+            position: sticky; top: 0;
+            padding: 8px;
+            border-bottom: 2px solid #ddd;
+            font-size: 13px;
+        }
+        td { padding: 8px; border-bottom: 1px solid #eee; text-align: center; }
+        th:first-child, td:first-child { width: 40px; background-color: #f1f1f1; font-weight: bold; }
+
+        h3 { margin: 0 0 10px 0; font-size: 16px; border-bottom: 2px solid #007bff; display: inline-block; }
+
+        /* [5. 모바일 반응형] */
+        @media (max-width: 768px) {
+            body { padding: 5px; gap: 5px; }
+
+            /* 헤더 모바일 조정 */
+            .header-container { padding: 10px; }
+            .title { font-size: 18px; }
+            .timer-text { font-size: 16px; }
+            .divider { margin: 0 8px; }
+            .left-section { gap: 5px; }
+
+            .dashboard-area { flex-direction: column; }
+            .left-panel { height: 40%; }
+            .right-panel-wrapper { height: 60%; }
+
+            .control-panel {
+                flex-direction: column;
+                gap: 5px;
+                padding: 8px;
+                align-items: stretch;
+            }
+
+            .input-group { justify-content: space-between; width: 100%; }
+            .input-group:nth-child(1) {
+                display: grid;
+                grid-template-columns: 1fr 1fr 1.2fr;
+                gap: 5px;
+            }
+            .input-group:nth-child(2), .input-group:nth-child(3) { display: none; }
+            
+            .mobile-row-2 {
+                display: grid !important;
+                grid-template-columns: auto 1fr auto;
+                gap: 5px;
+                align-items: center;
+            }
+
+            input[type="text"], input[type="password"], select { width: 100%; box-sizing: border-box; height: 35px; }
+            .submit-btn { height: 35px; }
+        }
