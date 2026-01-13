@@ -202,13 +202,24 @@ h3 { margin: 0 0 10px 0; font-size: 16px; border-bottom: 2px solid #007bff; disp
 }
 
 .admin-auth-box {
-    background: white; padding: 20px; border-radius: 12px; width: 280px; text-align: center; color: #333;
+    background: white; padding: 25px; border-radius: 12px; width: 280px; text-align: center; color: #333;
 }
 
-.admin-auth-box h4 { margin-top: 0; color: #111; }
+.admin-auth-box h4 { margin: 0 0 15px 0;      /* 상단 마진을 없애고 하단에만 여백을 줌 (중앙 정렬 핵심) */
+    color: #111; 
+    font-size: 18px;
+    width: 100%;             /* 너비를 꽉 채워서 text-align이 정확히 먹게 함 */ 
+}
 
 .admin-auth-box input {
-    width: 100%; padding: 12px; margin: 15px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 16px;
+    width: 100%; 
+    padding: 12px; 
+    margin-bottom: 20px;     /* 버튼과의 간격 확보 */
+    border: 1px solid #ddd; 
+    border-radius: 6px; 
+    box-sizing: border-box; 
+    font-size: 16px;
+    text-align: center;      /* 입력하는 비밀번호도 한가운데 오게 하면 더 예쁨! */
 }
 
 .auth-btns { display: flex; gap: 10px; }
