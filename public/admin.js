@@ -158,11 +158,15 @@ async function copyCurrentStatus() {
 
         if (currentDay === 'WED' && allLessons.length > 0) {
             text += `📍레슨\n\n`;
-            text += allLessons.map((item, idx) => {
+            text += activeLessons.map((item, idx) => {
                 const name = item.user_name || item.student_id;
-                // item.lesson_time에 저장된 시간 정보를 가져옴 (예: 18:00)
-                const time = item.lesson_time || '시간미정'; 
-                return `${idx + 1}. ${name} (${time})`;
+                const startMin = 18 * 60;
+                const myTimeMin = startMin + (idx * 15);
+                const h = Math.floor(myTimeMin / 60);
+                const m = myTimeMin % 60;
+                const timeLabel = `${h}:${m.toString().padStart(2, '0')}`;
+                
+                return `${idx + 1}. ${name} (${timeLabel})`;
             }).join('\n');            
             text += '\n';
         }
