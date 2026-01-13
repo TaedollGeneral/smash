@@ -101,12 +101,28 @@
         <div class="input-group mobile-row-2">
             <div style="display: flex; gap: 5px; white-space: nowrap;">
                 <label class="radio-label"><input type="radio" name="action" value="apply" checked>신청</label>
-                <label class="radio-label"><input type="radio" name="action" value="cancel">취소</label>
+                    <label class="radio-label"><input type="radio" name="action" value="cancel">취소</label>
             </div>
-            
+    
             <input type="text" name="name" id="guest-name-input" placeholder="이름(게스트)" style="display:none;">
-            
-            <button type="submit" class="submit-btn">확인</button>
+
+           <div class="submit-group" style="display: flex; align-items: center; gap: 5px; flex: 1;">
+                <button type="button" onclick="openAdminMode()" class="admin-btn" title="관리자 모드">
+                    ⚙️
+                </button>
+                <button type="button" class="submit-btn" onclick="submitForm()" style="flex: 1;">확인</button>
+            </div>
+        </div>
+
+        <div id="admin-panel" class="admin-panel" style="display: none;">
+            <div class="admin-header">
+                <h4 style="margin: 0;">🛠️ 관리자 전용 도구</h4>
+                <button onclick="closeAdminMode()" style="background:none; border:none; font-size:20px; cursor:pointer;">✕</button>
+            </div>
+            <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
+            <div class="admin-actions">
+                <button onclick="copyCurrentStatus()">📋 카톡 공지용 명단 복사</button>
+            </div>
         </div>
     </form>
 

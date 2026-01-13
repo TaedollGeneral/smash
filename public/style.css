@@ -337,4 +337,84 @@ h3 { margin: 0 0 10px 0; font-size: 16px; border-bottom: 2px solid #007bff; disp
     .hidden {
         display: none !important;
     }
+
+    .input-group.mobile-row-2 {
+        display: flex;
+        flex-wrap: wrap; /* 내용이 많으면 줄바꿈 */
+        gap: 8px;
+        align-items: center;
+    }
+
+    /* 신청/취소 라디오 버튼 그룹 */
+    .input-group.mobile-row-2 > div:first-child {
+        flex: 0 0 auto; /* 필요한 만큼만 공간 차지 */
+    }
+
+    /* [핵심] 관리자버튼 + 확인버튼이 포함된 그룹을 오른쪽 끝으로 밀기 */
+    .submit-group {
+        margin-left: auto; /* 왼쪽 마진을 최대로 밀어서 오른쪽 정렬 */
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    /* 버튼 높이가 들쭉날쭉하지 않게 보정 */
+    .admin-btn, .submit-btn {
+        height: 40px; 
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+}
+
+    /* 관리자 비밀 버튼 스타일 */
+.admin-btn {
+    background: none;
+    border: none;
+    border-radius: 5px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s;
+}
+
+.admin-btn:hover {
+    background-color: #f0f0f0;
+}
+
+/* 관리자 패널 스타일 */
+.admin-panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    box-shadow: 0 -5px 15px rgba(0,0,0,0.1);
+    border-radius: 20px 20px 0 0;
+    padding: 20px;
+    z-index: 1000;
+    animation: slideUp 0.4s ease;
+}
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.admin-actions button {
+    width: 100%;
+    padding: 12px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
 }
