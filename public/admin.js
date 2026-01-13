@@ -145,8 +145,8 @@ async function copyCurrentStatus() {
         if (finalGuests.length > 0) {
             text += `📍게스트\n`;
             finalGuests.forEach((item, idx) => {
-                const name = item.user_name || item.student_id;
-                text += name.padEnd(5, ' '); // 띄어쓰기 정렬
+                const gName = item.guest_name || "이름없음"; // 게스트 본인 이름
+                text += gName.padEnd(5, ' '); 
                 if ((idx + 1) % 5 === 0) text += '\n';
             });
             text += '\n\n';
