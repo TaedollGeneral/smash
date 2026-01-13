@@ -242,23 +242,63 @@ h3 { margin: 0 0 10px 0; font-size: 16px; border-bottom: 2px solid #007bff; disp
    6. [모바일 반응형]
    --------------------------------------------------------- */
 @media (max-width: 768px) {
-    body { padding: 5px; gap: 5px; }
+    body { padding: 5px; gap: 5px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
-    .header-container { padding: 10px; }
+    .header-container { padding: 10px; flex-shrink: 0; }
     .title1 { font-size: 18px; }
     .timer-text { font-size: 16px; }
     .divider { margin: 0 8px; }
     .left-section { gap: 5px; }
 
-    .dashboard-area { flex-direction: column; }
-    .left-panel { height: 40%; }
-    .right-panel-wrapper { height: 60%; }
+    /* [수정] 대시보드 영역: 화면 전체 높이에서 남은 공간을 꽉 채우도록 설정 */
+    .dashboard-area { 
+        display: flex;
+        flex-direction: column; 
+        flex: 1; /* 헤더와 컨트롤 패널을 제외한 모든 공간 차지 */
+        min-height: 0;
+        gap: 5px;
+    }
+    
+    /* [수정] 각 판넬 기본 설정: 접혔을 때와 펼쳐졌을 때의 애니메이션 핵심 */
+    .accordion-item { 
+        display: flex;
+        flex-direction: column;
+        background-color: white;
+        border-radius: 8px;
+        overflow: hidden;
+        transition: flex 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* 부드러운 자람 효과 */
+        padding: 0 10px; /* 내부 패딩 조정 */
+        border: 1px solid #ddd;
+    }
+
+    /* [추가] 펼쳐진 판넬: 남은 화면 공간을 꽉 채우며 자라남 */
+    .accordion-item:not(.collapsed) {
+        flex: 1; /* 다른 접힌 판넬들을 밀어내고 혼자 다 차지함 */
+    }
+
+    /* [추가] 접힌 판넬: 제목만 보일 정도로 최소 높이 고정 */
+    .accordion-item.collapsed {
+        flex: 0 0 45px; /* 제목 높이인 45px만 딱 차지하고 고정됨 */
+    }
+
+    .left-panel, .right-panel-wrapper, .sub-panel {
+        height: auto !important;
+        margin: 0;
+        padding: 0;
+        box-shadow: none;
+    }
+
+    /* [수정] 오른쪽 래퍼: 하위 판넬들이 flex를 직접 받도록 설정 변경 */
+    .right-panel-wrapper {
+        display: contents; /* 내부의 sub-panel들이 직접 flex 영향을 받게 함 */
+    }
 
     .control-panel {
         flex-direction: column;
         gap: 5px;
         padding: 8px;
         align-items: stretch;
+        flex-shrink: 0;
     }
 
     .input-group:nth-child(1) {
@@ -267,18 +307,26 @@ h3 { margin: 0 0 10px 0; font-size: 16px; border-bottom: 2px solid #007bff; disp
         gap: 5px;
     }
     
-    /* 아코디언 헤더 디자인 */
+    /* 아코디언 헤더 디자인: 높이를 고정하여 접혔을 때의 기준점으로 삼음 */
     .accordion-header {
+        height: 45px;
         display: flex;
         justify-content: space-between;
         align-items: center;
         cursor: pointer;
-        padding: 5px 0;
+        flex-shrink: 0; /* 제목이 찌그러지지 않게 방지 */
     }
 
-    /* 접혔을 때의 상태 */
+    /* [수정] 접혔을 때의 상태: 내용을 숨기고 스크롤도 차단 */
     .accordion-item.collapsed .accordion-content {
-        display: none; /* 내용 숨김 */
+        display: none !important;
+    }
+
+    /* 펼쳐진 상태의 내용 영역: 판넬 내부에서 독립적인 스크롤 제공 */
+    .accordion-content {
+        flex: 1;
+        overflow-y: auto;
+        padding-bottom: 10px;
     }
 
     .accordion-item.collapsed .arrow {
@@ -288,10 +336,5 @@ h3 { margin: 0 0 10px 0; font-size: 16px; border-bottom: 2px solid #007bff; disp
     /* 금요일 레슨 패널 원천 숨김 클래스 */
     .hidden {
         display: none !important;
-    }
-
-    /* 펼쳐진 판넬이 화면을 꽉 채우도록 높이 조정 */
-    .accordion-item {
-        transition: all 0.3s ease;
     }
 }
