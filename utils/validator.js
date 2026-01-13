@@ -12,13 +12,12 @@
  */
 
 //------------------------------------------------------------------------
-// 1. 임원진 마스터키 검증 함수 (pwd)
+// 1. 임원진 마스터키 검증 함수 (pwd), 단순 일치 검증(관리자 패널)
 //------------------------------------------------------------------------
+const MASTER_KEY = "2026m";
 
 function checkMasterAuth(pwd)
 {
-    const MASTER_KEY = "2026m";
-
     if (pwd !== MASTER_KEY) return { valid: false };
 
     const now = new Date();
@@ -33,8 +32,9 @@ function checkMasterAuth(pwd)
     return { valid: true};
 }
 
-
-
+const checkMasterKey = (inputKey) => {
+    return inputKey === MASTER_KEY;
+};
 
 
 
@@ -144,4 +144,4 @@ async function checkUserAuth(id, pwd)
  * 다른 파일(api.js 등)에서 이 함수를 불러와서 사용할 수 있도록 내보냅니다.
  * { checkTimeParams: checkTimeParams }의 줄임표현입니다.
  */
-module.exports = { checkTimeParams, checkMasterAuth, checkUserAuth };
+module.exports = { checkTimeParams, checkMasterAuth, checkUserAuth, checkMasterKey};

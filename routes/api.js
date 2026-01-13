@@ -17,7 +17,7 @@ const fs = require('fs');                     // 파일 읽기용 모듈
 const path = require('path');                 // 경로 조작용 도구
 
 // validator 호출
-const { checkTimeParams, checkMasterAuth, checkUserAuth } = require('../utils/validator');
+const { checkTimeParams, checkMasterAuth, checkUserAuth, checkMasterKey } = require('../utils/validator');
 
 // 현재 파일 기준 상위 폴더의 config/config.json 경로 설정
 const configPath = path.join(__dirname, '..', 'config', 'config.json');
@@ -145,7 +145,21 @@ router.get('/info', (req, res) => {
     }
 });
 
+//----------------------------------------------------------
+// 6. 마스터키 비교 (임원진 패널용)
+//----------------------------------------------------------
+router.post('/admin/verify', (req, res) => {
+    const { masterKey } = req.body;
+    
+    // validator에서 가져온 함수로 검증
+    if (checkMasterKey(masterKey)) {
+        res.json({ success: true });
+    } else {
+        res.status(401).json({ success: false, message: "마스터키가 올바르지 않습니다." });
+    }
+});
+
 // ---------------------------------------------------------
-// 6. 라우터 내보내기
+// 7. 라우터 내보내기
 // ---------------------------------------------------------
 module.exports = router;

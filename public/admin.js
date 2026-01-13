@@ -16,17 +16,30 @@ function closeAdminAuth() {
 }
 
 // 3. 마스터키 검증
-function verifyMasterKey() {
+async function verifyMasterKey() {
     const inputKey = document.getElementById('master-key-input').value;
-    const MASTER_KEY = "2026m"; // validator.js의 설정과 동일하게 맞춤
 
-    if (inputKey === MASTER_KEY) {
-        closeAdminAuth();
-        document.getElementById('admin-panel').style.display = 'block';
-        alert("✅ 관리자 모드가 활성화되었습니다.");
-    } else {
-        alert("❌ 마스터키가 올바르지 않습니다.");
-        document.getElementById('master-key-input').value = '';
+    if (!inputKey) return;
+
+    try {
+        const response = await fetch('/api/admin/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ masterKey: inputKey })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            closeAdminAuth();
+            document.getElementById('admin-panel').style.display = 'block';
+            alert("✅ 관리자 모드가 활성화되었습니다.");
+        } else {
+            alert("❌ " + result.message);
+            document.getElementById('master-key-input').value = '';
+        }
+    } catch (error) {
+        alert("서버 통신 중 오류가 발생했습니다.");
     }
 }
 
@@ -92,10 +105,20 @@ async function copyCurrentStatus() {
 
         // 1. 정회원 우선 확정
         const finalMembers = maxCap > 0 ? allMembers.slice(0, maxCap) : allMembers;
+
+        // [추가] 정회원 가나다순 정렬
+        finalMembers.sort((a, b) => {
+            const nameA = a.user_name || a.student_id;
+            const nameB = b.user_name || b.student_id;
+            return nameA.localeCompare(nameB, 'ko');
+        });
         
         // 2. 게스트 채우기 (남는 자리가 있을 때만)
         const remainingSeats = maxCap > 0 ? maxCap - finalMembers.length : 999;
         const finalGuests = remainingSeats > 0 ? allGuests.slice(0, remainingSeats) : [];
+
+        // [추가] 게스트 가나다순 정렬
+        finalGuests.sort((a, b) => a.guest_name.localeCompare(b.guest_name, 'ko'));
 
         // 3. 잔여석 계산
         const lastEmptySeats = maxCap > 0 ? (maxCap - (finalMembers.length + finalGuests.length)) : 0;
@@ -113,8 +136,7 @@ async function copyCurrentStatus() {
             text += '\n\n';
         }
 
-        // 임원진 섹션 (임원진 로직은 일단 별도 분류 없으므로 제목만 표시하거나 필요시 추가)
-        // 여기서는 예시 양식에 맞춰 게스트와 레슨만 추가함
+        text += `📍임원진\n`;
         
         if (finalGuests.length > 0) {
             text += `📍게스트\n`;
@@ -122,23 +144,23 @@ async function copyCurrentStatus() {
             text += '\n\n';
         }
 
-        if (allLessons.length > 0) {
-            text += `📍레슨\n`;
-            text += allLessons.map((item, idx) => `${idx + 1}. ${item.user_name || item.student_id}`).join('\n');
-            text += '\n\n';
-        }
-
         if (maxCap > 0) {
-            text += `( 잔여석 : ${lastEmptySeats} )\n\n`;
+            text += `( 잔여석 : ${lastEmptySeats} )\n`;
         }
 
-        text += `신청: ${window.location.origin}`;
+        if (currentDay === 'WED' && allLessons.length > 0) {
+            text += `📍레슨\n\n`;
+            text += allLessons.map((item, idx) => `${idx + 1}. ${item.user_name || item.student_id}`).join('\n');
+            text += '\n';
+        }
+
+
         const finalText = text.trim();
 
         // --- 복사 실행 ---
         if (window.isSecureContext && navigator.clipboard && navigator.clipboard.writeText) {
             await navigator.clipboard.writeText(finalText);
-            alert("📋 정원 계산된 명단이 복사되었습니다!");
+            alert("📋 명단이 복사되었습니다!");
         } else {
             const textArea = document.createElement("textarea");
             textArea.value = finalText;
@@ -146,7 +168,7 @@ async function copyCurrentStatus() {
             textArea.select();
             document.execCommand('copy');
             document.body.removeChild(textArea);
-            alert("📋 정원 계산된 명단이 복사되었습니다! (우회)");
+            alert("📋 명단이 복사되었습니다! (보안 우회)");
         }
 
     } catch (err) {
