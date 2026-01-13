@@ -1,173 +1,160 @@
-// ==========================================
-// 📅 [전역 설정] 현재 요일 상태 관리 (기본값: 수요일)
-// ==========================================
-let currentDay = 'WED'; // 'WED' or 'FRI'
+/**
+ * [FILE: public/script.js]
+ * 역할: 브라우저 화면의 실시간 업데이트, 서버와의 데이터 송수신(AJAX), 사용자 이벤트 처리를 담당합니다.
+ */
 
+// ==========================================
+// 1. [Global State] 전역 상태 관리
+// ==========================================
+// 현재 사용자가 선택한 요일 정보를 저장합니다. (기본값: 수요일)
+let currentDay = 'WED'; 
 
 // ==========================================
-// ⏰ [타이머] 시간 표시 로직
+// 2. [Timer Logic] 실시간 카운트다운 로직
 // ==========================================
+/**
+ * 현재 시간과 목표 시간을 비교하여 남은 시간을 화면에 표시합니다.
+ * 요일별로 오픈/마감 기준이 다르므로 이를 계산하는 로직이 핵심입니다.
+ */
 function updateTimer() {
-    const now = new Date();
-    const day = now.getDay(); // 0(일) ~ 6(토)
-    const hour = now.getHours();
+    const now = new Date();           // 현재 시각
+    const day = now.getDay();        // 현재 요일 (0:일 ~ 6:토)
+    const hour = now.getHours();     // 현재 시간 (0~23)
     
-    // 화면 요소 가져오기
+    // HTML 요소를 변수에 저장
     const statusText = document.getElementById('status-text');
     const timerDisplay = document.getElementById('timer-display');
     
-    // 목표 시간(Target)과 상태(Mode) 결정
-    let targetTime = new Date();
-    let mode = ""; // 'OPEN_WAIT'(오픈대기) or 'QtCLOSING'(마감임박)
+    let targetTime = new Date();     // 목표 시간을 담을 객체
+    let mode = "";                   // 현재 상태 (오픈대기 vs 마감임박)
 
-    // ----------------------------------------------------
-    // 1. 현재 선택된 요일(currentDay)에 따라 목표 설정
-    // ----------------------------------------------------
-    
+    // --- [수요일(WED) 기준 시간 계산] ---
     if (currentDay === 'WED') {
-        // [수요일 투표 기준]
-        // 오픈 기간: 토요일 22:00 ~ 화요일 23:59:59
-        // 마감 기간: 수요일 00:00 ~ 토요일 21:59:59
-        
-        // (1) 이미 마감되었는가? (수, 목, 금, 토요일 22시 전)
+        // (1) 마감 모드 체크 (수, 목, 금, 토요일 밤 10시 전)
         if (day === 3 || day === 4 || day === 5 || (day === 6 && hour < 22)) {
             mode = "OPEN_WAIT";
-            // 목표: 다가오는 토요일 22시
-            const dist = (6 - day + 7) % 7; // 토요일까지 남은 일수
+            // 다음 오픈 목표: 다가오는 토요일 22:00:00
+            const dist = (6 - day + 7) % 7;
             targetTime.setDate(now.getDate() + dist);
             targetTime.setHours(22, 0, 0, 0);
         } 
-        // (2) 오픈 중인가?
+        // (2) 오픈 모드 (투표 진행 중)
         else {
             mode = "CLOSING";
-            // 목표: 다가오는 화요일 23:59:59
-            // 일(0), 월(1), 화(2) -> 화요일까지
-            // 토(6) -> 다음주 화요일까지
+            // 마감 목표: 다가오는 화요일 23:59:59
             let dist = (2 - day + 7) % 7; 
             targetTime.setDate(now.getDate() + dist);
             targetTime.setHours(23, 59, 59, 999);
         }
     } 
+    // --- [금요일(FRI) 기준 시간 계산] ---
     else if (currentDay === 'FRI') {
-        // [금요일 투표 기준]
-        // 오픈 기간: 토요일 22:00 ~ 목요일 23:59:59
-        // 마감 기간: 금요일 00:00 ~ 토요일 21:59:59
-
-        // (1) 이미 마감되었는가? (금, 토요일 22시 전)
+        // (1) 마감 모드 체크 (금, 토요일 밤 10시 전)
         if (day === 5 || (day === 6 && hour < 22)) {
             mode = "OPEN_WAIT";
-            // 목표: 다가오는 토요일 22시
+            // 다음 오픈 목표: 다가오는 토요일 22:00:00
             const dist = (6 - day + 7) % 7;
             targetTime.setDate(now.getDate() + dist);
             targetTime.setHours(22, 0, 0, 0);
         } 
-        // (2) 오픈 중인가?
+        // (2) 오픈 모드 (투표 진행 중)
         else {
             mode = "CLOSING";
-            // 목표: 다가오는 목요일 23:59:59
+            // 마감 목표: 다가오는 목요일 23:59:59
             let dist = (4 - day + 7) % 7;
             targetTime.setDate(now.getDate() + dist);
             targetTime.setHours(23, 59, 59, 999);
         }
     }
 
-    // ----------------------------------------------------
-    // 2. 화면 표시 (글자색 및 텍스트 변경)
-    // ----------------------------------------------------
-    
-    // 만약 목표 시간이 과거라면 (계산 꼬임 방지용 안전장치), 1주일 뒤로 밈
-    if (targetTime < now) {
-        targetTime.setDate(targetTime.getDate() + 7);
-    }
+    // --- [화면 렌더링] ---
+    // 목표 시간이 이미 지났다면 1주일 뒤로 설정 (안전장치)
+    if (targetTime < now) targetTime.setDate(targetTime.getDate() + 7);
 
+    // 상태에 따른 UI 변경
     if (mode === "OPEN_WAIT") {
         statusText.innerText = "투표 시작까지";
-        timerDisplay.className = "timer-text text-gray"; // 초록색
+        timerDisplay.className = "timer-text text-gray"; // 회색 처리
     } else {
         statusText.innerText = "투표 마감까지";
-        timerDisplay.className = "timer-text text-green";   // 빨간색
+        timerDisplay.className = "timer-text text-green"; // 강조색 처리
     }
 
-    // 남은 시간 계산
+    // 시간 차이 계산 (밀리초 단위)
     const diff = targetTime - now;
-    // (혹시 미세한 차이로 음수가 되면 0으로 처리)
     if (diff < 0) {
-        timerDisplay.innerText = "00:00:00";
+        timerDisplay.innerText = "00:00:00:00";
         return;
     }
 
-    const d = Math.floor(diff / (1000 * 60 * 60 * 24)); // 일 (Days)
-    const h = Math.floor((diff / (1000 * 60 * 60)) % 24); // 시 (Hours - 24시간 나머지)
-    const m = Math.floor((diff / (1000 * 60)) % 60); // 분 (Minutes)
-    const s = Math.floor((diff / 1000) % 60); // 초 (Seconds)
+    // 밀리초를 일:시:분:초 단위로 변환
+    const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+    const m = Math.floor((diff / (1000 * 60)) % 60);
+    const s = Math.floor((diff / 1000) % 60);
 
-    
-   // 화면에 표시 (예: 01:14:30:05)
+    // 00:00:00:00 형식으로 표시 (padStart를 사용하여 한 자리 숫자 앞에 0을 붙임)
     timerDisplay.innerText = 
         `${d.toString().padStart(2, '0')}:${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 }
 
-// 1초마다 타이머 갱신
+// 1초마다 타이머 함수 실행
 setInterval(updateTimer, 1000);
-updateTimer();
-
-
-// ==========================================
-// 👆 [UI] 요일 선택 버튼 로직 (핵심!)
-// ==========================================
-function selectDay(day, element) {
-    // 1. 변수 업데이트
-    currentDay = day; 
-    console.log("요일 변경됨:", currentDay);
-
-    // 2. 버튼 스타일 변경
-    document.querySelectorAll('.day-btn').forEach(btn => btn.classList.remove('active'));
-    element.classList.add('active');
-
-    // 3. ★ 중요: 바뀐 요일의 데이터를 서버에서 즉시 가져오기
-    fetchStatus(); 
-}
-
+updateTimer(); // 페이지 접속 시 즉시 실행
 
 // ==========================================
-// 📡 [Polling] 서버에서 실시간 명단 가져오기
+// 3. [Data Fetching] 서버 데이터 통신
 // ==========================================
+/**
+ * 서버에서 특정 요일의 신청자 명단을 가져와 화면에 다시 그립니다.
+ */
 function fetchStatus() {
-    // 서버에 "현재 선택된 요일(currentDay)" 데이터를 달라고 요청
+    // API 주소에 현재 선택된 요일(?day=WED)을 파라미터로 전달
     fetch(`/api/status?day=${currentDay}`)
         .then(response => response.json())
         .then(data => {
-            // 1. 기존 테이블 내용 싹 비우기 (초기화)
+            // 기존에 그려진 테이블 내용 삭제 (중복 추가 방지)
             document.getElementById('exercise-list').innerHTML = '';
             document.getElementById('guest-list').innerHTML = '';
             document.getElementById('lesson-list').innerHTML = '';
 
-            // 2. 받아온 데이터로 테이블 다시 채우기
-          data.forEach(item => {
-                // DB에서 가져온 user_name(신청자)과 guest_name(게스트)을 그대로 넘김
-                // (만약 조인 에러로 user_name이 없으면 학번이라도 넣도록 처리)
+            // 받아온 명단 데이터를 한 줄씩 테이블에 추가
+            data.forEach(item => {
                 const applicantName = item.user_name || item.student_id;
                 const guestName = item.guest_name || "";
-
                 addRawToTable(item.category, applicantName, guestName, item.created_at);
             });
         })
-        .catch(err => console.error("데이터 로딩 실패:", err));
+        .catch(err => console.error("명단 로딩 실패:", err));
 }
 
-// 2초마다 자동으로 명단 새로고침 (실시간 효과)
+// 2초마다 실시간으로 명단 동기화
 setInterval(fetchStatus, 2000);
-// 페이지 켜자마자 한번 실행
 fetchStatus();
 
+// ==========================================
+// 4. [Event Handlers] 사용자 클릭 이벤트 처리
+// ==========================================
+/**
+ * 요일 선택 버튼 클릭 시 호출됩니다.
+ */
+function selectDay(day, element) {
+    currentDay = day; 
+    // 모든 버튼에서 active 클래스 제거 후 클릭된 버튼에만 추가
+    document.querySelectorAll('.day-btn').forEach(btn => btn.classList.remove('active'));
+    element.classList.add('active');
+    // 바뀐 요일의 데이터를 즉시 불러옴
+    fetchStatus(); 
+}
 
-// ==========================================
-// 🚀 [UI] 카테고리별 입력창 제어
-// ==========================================
+/**
+ * 신청 카테고리(운동/게스트/레슨) 변경 시 입력창 제어
+ */
 const categorySelect = document.getElementById('category-select');
 const guestNameInput = document.getElementById('guest-name-input');
 
 categorySelect.addEventListener('change', function() {
+    // 게스트 카테고리일 때만 게스트 이름 입력창 노출
     if (this.value === 'guest') {
         guestNameInput.style.display = 'block';
         guestNameInput.required = true;
@@ -177,17 +164,17 @@ categorySelect.addEventListener('change', function() {
         guestNameInput.required = false;
     }
 });
-categorySelect.dispatchEvent(new Event('change')); // 초기 실행
-
+categorySelect.dispatchEvent(new Event('change')); // 초기값에 맞춰 한 번 실행
 
 // ==========================================
-// 📨 [AJAX] 신청서 제출 로직
+// 5. [AJAX Submission] 폼 제출 (신청/취소)
 // ==========================================
 const applyForm = document.querySelector('.control-panel');
 
 applyForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
+    e.preventDefault(); // 기본 폼 새로고침 동작 방지
 
+    // 라디오 버튼으로 선택된 액션(apply/cancel) 가져오기
     const actionType = document.querySelector('input[name="action"]:checked').value;
 
     const formData = {
@@ -195,7 +182,7 @@ applyForm.addEventListener('submit', async (e) => {
         pwd: applyForm.pwd.value,
         category: applyForm.category.value,
         name: applyForm.name.value,
-        day: currentDay // ★ [추가] 현재 선택된 요일 정보도 같이 보냄!
+        day: currentDay // 현재 화면에 표시된 요일 정보 전송
     };
 
     if (!formData.id || !formData.pwd) {
@@ -203,7 +190,7 @@ applyForm.addEventListener('submit', async (e) => {
         return;
     }
 
-    // [A] 취소 로직
+    // --- [A] 취소 처리 ---
     if (actionType === 'cancel') {
         if (!confirm("정말 취소하시겠습니까?")) return;
 
@@ -216,92 +203,73 @@ applyForm.addEventListener('submit', async (e) => {
             const result = await response.json();
 
             if (result.success) {
-            alert(result.message);
-            
-            // ★ [수정] 서버가 준 userName과 guestName을 이용해서 즉시 추가
-            addRawToTable(result.category, result.userName, result.guestName);
-            
-            applyForm.id.value = '';
-            applyForm.name.value = '';
-            } 
-            else {
+                alert(result.message);
+                fetchStatus(); // 취소 성공 시 명단 즉시 새로고침
+                applyForm.id.value = '';
+                applyForm.pwd.value = '';
+            } else {
                 alert("실패: " + result.message);
             }
-
         } catch (error) {
-            console.error(error);
             alert("서버 연결 실패");
         }
         return;
     }
 
-    // [B] 신청 로직
+    // --- [B] 신청 처리 ---
     try {
         const response = await fetch('/api/apply', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(formData)
         });
-
         const result = await response.json();
 
         if (result.success) {
             alert(result.message);
-            // 즉시 화면에 반영 (서버 응답값 활용)
-            addRawToTable(result.category, result.id, result.name);
-            
+            fetchStatus(); // 신청 성공 시 명단 즉시 새로고침
             applyForm.id.value = '';
-            applyForm.name.value = '';
+            applyForm.pwd.value = '';
         } else {
             alert("실패: " + result.message);
         }
     } catch (error) {
-        console.error("통신 에러:", error);
-        alert("서버랑 연결이 안 돼요 ㅠㅠ");
+        alert("서버 연결 실패");
     }
 });
 
-
 // ==========================================
-// 📊 [Table] 테이블 그리기 함수 (시간 표시 수정됨)
+// 6. [UI Utilities] 테이블 그리기 및 정보 업데이트
 // ==========================================
-// timeOverride: 서버에서 받아온 과거 신청 시간 (없으면 현재시간)
+/**
+ * 명단 테이블에 데이터를 한 줄 추가합니다.
+ */
 function addRawToTable(category, applicantName, guestName, timeOverride = null) {
     let targetTableId = "";
     let col1_text = "";
     let col2_text = "";
 
-    // 1. 시간 표시 로직
+    // 시간 표시 형식 변환 (HH:MM)
     let displayTime;
-    if (timeOverride) {
-        // DB에 저장된 시간(created_at)이 있으면 그걸 씀 (ISO 문자열 등)
-        const dateObj = new Date(timeOverride);
-        displayTime = `${dateObj.getHours()}:${dateObj.getMinutes().toString().padStart(2, '0')}`;
-    } else {
-        // 방금 내가 신청한 거면 현재 시간
-        const now = new Date();
-        displayTime = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
-    }
+    const dateObj = timeOverride ? new Date(timeOverride) : new Date();
+    displayTime = `${dateObj.getHours()}:${dateObj.getMinutes().toString().padStart(2, '0')}`;
 
-    // 2. 카테고리별 분기
+    // 카테고리별 테이블 배정 및 데이터 설정
     if (category === "exercise") {
         targetTableId = "exercise-list";
-        col1_text = applicantName;          //학번 대신 실명으로 표시
-        col2_text = displayTime; // 신청 시간
-
+        col1_text = applicantName; 
+        col2_text = displayTime;
     } else if (category === "guest") {
         targetTableId = "guest-list";
         col1_text = guestName;       
-        col2_text = applicantName;         
-
+        col2_text = applicantName; // 신청자 이름
     } else if (category === "lesson") {
         targetTableId = "lesson-list";
-        col1_text = applicantName;         
+        col1_text = applicantName; 
         
-        // 레슨 시간 계산 (현재 테이블 줄 수 기반)
+        // 레슨 대기열 순번에 따라 예상 시간(15분 단위) 계산
         const tbody = document.getElementById('lesson-list');
-        const currentCount = tbody.children.length; // 대기자 수
-        
+        const currentCount = tbody.children.length; 
         const startMin = 18 * 60; // 18:00 시작
         const myLessonTimeMin = startMin + (currentCount * 15);
         
@@ -314,12 +282,11 @@ function addRawToTable(category, applicantName, guestName, timeOverride = null) 
         }
     }
 
-    // 3. 테이블에 끼워넣기
     const tbody = document.getElementById(targetTableId);
-    if (!tbody) return; // 에러 방지
+    if (!tbody) return;
 
     const newRow = document.createElement('tr');
-    const no = tbody.children.length + 1;
+    const no = tbody.children.length + 1; // 연번 계산
 
     newRow.innerHTML = `
         <td>${no}</td>
@@ -329,16 +296,13 @@ function addRawToTable(category, applicantName, guestName, timeOverride = null) 
     tbody.appendChild(newRow);
 }
 
-
-// ==========================================
-// 🏷️ [UI] 주차 정보 자동 업데이트
-// ==========================================
+/**
+ * 서버에서 현재 학기 및 주차 정보를 가져와 상단 제목을 업데이트합니다.
+ */
 function updateTitle() {
     fetch('/api/info')
         .then(res => res.json())
         .then(data => {
-            // HTML의 제목 태그(.title)를 찾아서 글자 변경
-            // 예: "Smash 1주차" -> "Smash 2주차"
             const titleElement = document.querySelector('.title');
             if (titleElement) {
                 titleElement.innerText = `${data.semester}학기 ${data.week}주차`;
@@ -347,5 +311,4 @@ function updateTitle() {
         .catch(err => console.error("주차 정보 로딩 실패:", err));
 }
 
-// 페이지 켜지자마자 실행
 updateTitle();
