@@ -86,11 +86,10 @@
         </div>
     </div>
 
-    <form action="/api/apply" method="post" class="control-panel">
-        
+    <div class="control-panel">
         <div class="input-group">
-            <input type="text" name="id" placeholder="학번" required>
-            <input type="password" name="pwd" placeholder="비번" required>
+            <input type="text" name="id" id="user-id" placeholder="학번" required>
+            <input type="password" name="pwd" id="user-pwd" placeholder="비번" required>
             <select name="category" id="category-select">
                 <option value="exercise">운동</option>
                 <option value="guest">게스트</option>
@@ -101,31 +100,43 @@
         <div class="input-group mobile-row-2">
             <div style="display: flex; gap: 5px; white-space: nowrap;">
                 <label class="radio-label"><input type="radio" name="action" value="apply" checked>신청</label>
-                    <label class="radio-label"><input type="radio" name="action" value="cancel">취소</label>
+                <label class="radio-label"><input type="radio" name="action" value="cancel">취소</label>
             </div>
     
             <input type="text" name="name" id="guest-name-input" placeholder="이름(게스트)" style="display:none;">
 
-           <div class="submit-group" style="display: flex; align-items: center; gap: 5px; flex: 1;">
-                <button type="button" onclick="openAdminMode()" class="admin-btn" title="관리자 모드">
+            <div class="submit-group" style="display: flex; align-items: center; gap: 5px; flex: 1;">
+                <button type="button" onclick="openAdminAuth()" class="admin-btn" title="관리자 모드">
                     ⚙️
                 </button>
                 <button type="button" class="submit-btn" onclick="submitForm()" style="flex: 1;">확인</button>
             </div>
         </div>
+    </div>
 
-        <div id="admin-panel" class="admin-panel" style="display: none;">
-            <div class="admin-header">
-                <h4 style="margin: 0;">🛠️ 관리자 전용 도구</h4>
-                <button onclick="closeAdminMode()" style="background:none; border:none; font-size:20px; cursor:pointer;">✕</button>
-            </div>
-            <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
-            <div class="admin-actions">
-                <button onclick="copyCurrentStatus()">📋 카톡 공지용 명단 복사</button>
+    <div id="admin-auth-layer" class="admin-layer" style="display: none;">
+        <div class="admin-auth-box">
+            <h4>🔑 관리자 인증</h4>
+            <input type="password" id="master-key-input" placeholder="마스터키 입력">
+            <div class="auth-btns">
+                <button onclick="closeAdminAuth()">취소</button>
+                <button onclick="verifyMasterKey()" class="btn-blue">확인</button>
             </div>
         </div>
-    </form>
+    </div>
+
+    <div id="admin-panel" class="admin-panel" style="display: none;">
+        <div class="admin-header">
+            <h4 style="margin: 0;">🛠️ 관리자 전용 도구</h4>
+            <button onclick="closeAdminMode()" style="background:none; border:none; font-size:20px; cursor:pointer;">✕</button>
+        </div>
+        <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
+        <div class="admin-actions">
+            <button onclick="copyCurrentStatus()">📋 카톡 공지용 명단 복사</button>
+        </div>
+    </div>
 
     <script src="script.js"></script>
+    <script src="admin.js"></script>
 </body>
 </html>
