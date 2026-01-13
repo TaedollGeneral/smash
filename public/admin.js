@@ -41,7 +41,8 @@ function closeAdminMode() {
  */
 async function copyCurrentStatus() {
     try {
-        const response = await fetch(`/api/status?day=${currentDay}`); //
+        // 1. 서버 데이터 가져오기 (currentDay 변수 공유)
+        const response = await fetch(`/api/status?day=${currentDay}`);
         const data = await response.json();
         
         if (!data || data.length === 0) {
@@ -54,13 +55,7 @@ async function copyCurrentStatus() {
         const dayName = currentDay === 'WED' ? '수요일' : '금요일';
         
         let text = `🏸 SMASH ${dateStr}(${dayName}) 운동 명단\n\n`;
-
-        // 카테고리별 분류 (서버 API 응답 필드 기준: category, user_name, guest_name)
-        const categories = {
-            exercise: "🏃 정회원",
-            guest: "😊 게스트",
-            lesson: "🎓 레슨"
-        };
+        const categories = { exercise: "🏃 정회원", guest: "😊 게스트", lesson: "🎓 레슨" };
 
         Object.keys(categories).forEach(key => {
             const list = data.filter(item => item.category === key);
@@ -68,21 +63,51 @@ async function copyCurrentStatus() {
                 text += `[${categories[key]} - ${list.length}명]\n`;
                 text += list.map((item, idx) => {
                     const name = item.user_name || item.student_id;
-                    return key === 'guest' 
-                        ? `${idx + 1}. ${item.guest_name}(${name})` 
-                        : `${idx + 1}. ${name}`;
+                    return key === 'guest' ? `${idx + 1}. ${item.guest_name}(${name})` : `${idx + 1}. ${name}`;
                 }).join('\n');
                 text += '\n\n';
             }
         });
 
         text += `신청: ${window.location.origin}`;
+        const finalText = text.trim();
 
-        await navigator.clipboard.writeText(text.trim());
-        alert("📋 명단이 복사되었습니다! 카톡방에 붙여넣기 하세요.");
+        // 2. [핵심 수정] 복사 로직 순서 변경 및 안전장치 강화
+        // 최신 API가 확실히 존재할 때만 사용 (navigator.clipboard 객체 체크)
+        if (window.isSecureContext && navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(finalText);
+            alert("📋 명단이 복사되었습니다!");
+        } else {
+            // HTTPS가 아니거나 최신 API가 없는 경우 (IP 접속 환경 등)
+            const textArea = document.createElement("textarea");
+            textArea.value = finalText;
+            
+            // 화면에 안 보이게 숨기기
+            textArea.style.position = "fixed";
+            textArea.style.left = "-9999px";
+            textArea.style.top = "0";
+            document.body.appendChild(textArea);
+            
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                // 구식 복사 명령 실행 (줄 그어져 있어도 작동함)
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    alert("📋 명단이 복사되었습니다! (보안 우회 모드)");
+                } else {
+                    throw new Error('복사 명령 실패');
+                }
+            } catch (err) {
+                alert("❌ 브라우저 차단으로 복사에 실패했습니다. 수동으로 복사해주세요.");
+            }
+            
+            document.body.removeChild(textArea);
+        }
 
     } catch (err) {
         console.error('명단 복사 에러:', err);
-        alert("데이터를 가져오는 중 오류가 발생했습니다.");
+        alert("데이터 처리 중 오류가 발생했습니다.");
     }
 }
