@@ -41,3 +41,5 @@ function checkTimeParams(targetDay, category) {
 
     return { valid: true };
 }
+
+module.exports = { checkTimeParams }; 
