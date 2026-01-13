@@ -48,6 +48,7 @@ function closeAdminMode() {
     document.getElementById('admin-panel').style.display = 'none';
 }
 
+
 /**
  * 5. 날짜 계산기 함수
  * 현재 주차(week)와 선택된 요일(currentDay)을 바탕으로 실제 날짜를 반환함
@@ -72,7 +73,10 @@ function getTargetDate(week, day) {
     const date = targetDate.getDate();
     const dayName = (day === 'WED') ? '수요일' : '금요일';
 
-    return `${month}/${date} ${dayName}`;
+    // 요일에 따른 자동 완성 문구 설정
+    const type = (day === 'WED') ? '정기운동 18-21시' : '추가운동 15-17시';
+
+    return `${month}/${date} ${dayName} ${type}`;
 }
 
 
@@ -124,7 +128,7 @@ async function copyCurrentStatus() {
         const lastEmptySeats = maxCap > 0 ? (maxCap - (finalMembers.length + finalGuests.length)) : 0;
 
         // --- [텍스트 조립 시작] ---
-        let text = `📌${dateTitle} 운동 명단\n\n`;
+        let text = `📌${dateTitle}\n\n`;
 
         // 정회원 출력 (한 줄에 5명씩 예쁘게)
         if (finalMembers.length > 0) {
@@ -136,21 +140,30 @@ async function copyCurrentStatus() {
             text += '\n\n';
         }
 
-        text += `📍임원진\n`;
+        text += `📍임원진\n\n\n`;
         
         if (finalGuests.length > 0) {
             text += `📍게스트\n`;
-            text += finalGuests.map((item, idx) => `${idx + 1}. ${item.guest_name}(${item.user_name || item.student_id})`).join('\n');
+            finalGuests.forEach((item, idx) => {
+                const name = item.user_name || item.student_id;
+                text += name.padEnd(5, ' '); // 띄어쓰기 정렬
+                if ((idx + 1) % 5 === 0) text += '\n';
+            });
             text += '\n\n';
         }
 
         if (maxCap > 0) {
-            text += `( 잔여석 : ${lastEmptySeats} )\n`;
+            text += `( 잔여석 : ${lastEmptySeats} )\n\n\n`;
         }
 
         if (currentDay === 'WED' && allLessons.length > 0) {
             text += `📍레슨\n\n`;
-            text += allLessons.map((item, idx) => `${idx + 1}. ${item.user_name || item.student_id}`).join('\n');
+            text += allLessons.map((item, idx) => {
+                const name = item.user_name || item.student_id;
+                // item.lesson_time에 저장된 시간 정보를 가져옴 (예: 18:00)
+                const time = item.lesson_time || '시간미정'; 
+                return `${idx + 1}. ${name} (${time})`;
+            }).join('\n');            
             text += '\n';
         }
 
