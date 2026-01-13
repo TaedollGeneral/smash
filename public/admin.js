@@ -86,13 +86,6 @@ function getTargetDate(week, day) {
  * script.js에 있는 currentDay 변수를 그대로 사용하여 현재 화면의 명단을 가공함
  */
 async function copyCurrentStatus() {
-    // [아이폰 대응] 비동기 작업 전 미리 textarea를 생성하여 포커스 기반을 마련합니다.
-    const textArea = document.createElement("textarea");
-    textArea.style.position = "fixed";
-    textArea.style.left = "-9999px";
-    textArea.style.top = "0";
-    document.body.appendChild(textArea);
-
     try {
         const [infoRes, statusRes] = await Promise.all([
             fetch('/api/info'),
@@ -103,7 +96,6 @@ async function copyCurrentStatus() {
         
         if (!data || data.length === 0) {
             alert("⚠️ 신청자가 없습니다.");
-            document.body.removeChild(textArea); // 에러 시 제거
             return;
         }
 
@@ -142,7 +134,7 @@ async function copyCurrentStatus() {
         if (finalMembers.length > 0) {
             finalMembers.forEach((item, idx) => {
                 const name = item.user_name || item.student_id;
-                text += name.padEnd(5, ' '); 
+                text += name.padEnd(5, ' '); // 띄어쓰기 정렬
                 if ((idx + 1) % 5 === 0) text += '\n';
             });
             text += '\n\n';
@@ -153,7 +145,7 @@ async function copyCurrentStatus() {
         if (finalGuests.length > 0) {
             text += `📍게스트\n`;
             finalGuests.forEach((item, idx) => {
-                const gName = item.guest_name || "이름없음"; 
+                const gName = item.guest_name || "이름없음"; // 게스트 본인 이름
                 text += gName.padEnd(5, ' '); 
                 if ((idx + 1) % 5 === 0) text += '\n';
             });
@@ -165,17 +157,19 @@ async function copyCurrentStatus() {
         }
 
         if (currentDay === 'WED' && allLessons.length > 0) {
+            // [수정 포인트 1] 21시 이전 인원만 필터링하여 activeLessons 정의
             const activeLessons = allLessons.filter((item, idx) => {
-                const startMin = 18 * 60; 
-                return (startMin + (idx * 15)) < (21 * 60); 
+                const startMin = 18 * 60; // 18:00 시작
+                return (startMin + (idx * 15)) < (21 * 60); // 21:00 미만인 사람만 남김
             });
 
+            // [수정 포인트 2] 필터링된 인원이 있을 때만 출력
             if (activeLessons.length > 0) {
                 text += `📍레슨\n\n`;
                 text += activeLessons.map((item, idx) => {
                     const name = item.user_name || item.student_id;
                     const startMin = 18 * 60;
-                    const myTimeMin = startMin + (idx * 15); 
+                    const myTimeMin = startMin + (idx * 15); // 순서에 따른 시간 계산
                     const h = Math.floor(myTimeMin / 60);
                     const m = myTimeMin % 60;
                     const timeLabel = `${h}:${m.toString().padStart(2, '0')}`;
@@ -187,41 +181,23 @@ async function copyCurrentStatus() {
         }
 
         const finalText = text.trim();
-        textArea.value = finalText;
 
-        // --- [아이폰 호환 복사 실행] ---
-        // iOS Safari에서는 복사 로직 전에 텍스트 선택(Range)을 강제로 잡아주는 것이 중요합니다.
-        if (navigator.userAgent.match(/ipad|ipod|iphone/i)) {
-            const range = document.createRange();
-            range.selectNodeContents(textArea);
-            const selection = window.getSelection();
-            selection.removeAllRanges();
-            selection.addRange(range);
-            textArea.setSelectionRange(0, 999999);
-        } else {
-            textArea.select();
-        }
-
-        const successful = document.execCommand('copy');
-        if (successful) {
+        // --- 복사 실행 ---
+        if (window.isSecureContext && navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(finalText);
             alert("📋 명단이 복사되었습니다!");
         } else {
-            // Clipboard API 시도 (execCommand 실패 시 대비)
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                await navigator.clipboard.writeText(finalText);
-                alert("📋 명단이 복사되었습니다!");
-            } else {
-                throw new Error('복사 실패');
-            }
+            const textArea = document.createElement("textarea");
+            textArea.value = finalText;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            alert("📋 명단이 복사되었습니다! (보안 우회)");
         }
 
     } catch (err) {
         console.error(err);
         alert("오류가 발생했습니다.");
-    } finally {
-        // 성공하든 실패하든 임시 생성한 textArea는 제거합니다.
-        if (document.body.contains(textArea)) {
-            document.body.removeChild(textArea);
-        }
     }
 }
