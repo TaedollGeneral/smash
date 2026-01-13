@@ -4,6 +4,9 @@
  * 주요 기능: 신청자 인증, 중복 검사, DB 기록, 실시간 현황 데이터 제공
  */
 
+
+
+
 // ---------------------------------------------------------
 // 1. 외부 모듈 및 설정 로드
 // ---------------------------------------------------------
@@ -14,100 +17,89 @@ const { checkTimeParams } = require('../utils/validator'); // 시간 검증 유�
 const fs = require('fs');                     // 파일 읽기용 모듈
 const path = require('path');                 // 경로 조작용 도구
 
+// validator 호출
+const { checkTimeParams, checkMasterAuth, checkUserAuth } = require('../utils/validator');
 // 현재 파일 기준 상위 폴더의 config/config.json 경로 설정
 const configPath = path.join(__dirname, '..', 'config', 'config.json');
+
+
+
 
 // ---------------------------------------------------------
 // 2. [POST] /api/apply : 신청하기
 // ---------------------------------------------------------
-router.post('/apply', (req, res) => {
-    // 클라이언트가 보낸 데이터 추출 (학번, 비번, 종목, 이름, 요일)
-    const { id, pwd, category, name, day } = req.body; 
+router.post('/apply', async (req, res) => {
+    const { id, pwd, category, name, day } = req.body;
 
-    // [STEP 1: 시간 검증] 신청 가능한 요일/시간인지 수문장(validator)에게 물어봅니다.
-    const timeCheck = checkTimeParams(day, category);
-    if (!timeCheck.valid) {
-        return res.json({ success: false, message: timeCheck.msg });
+    // 1. 마스터키 확인 (맞으면 바로 통과)
+    const master = checkMasterAuth(pwd);
+    let applicantName = "관리자(대리)";
+
+    if (!master.valid) {
+        // 2. 시간 확인 (일반 유저일 때만)
+        const time = checkTimeParams(day, category);
+        if (!time.valid) return res.json({ success: false, message: time.msg });
+
+        // 3. 본인 확인 (일반 유저일 때만)
+        const user = await checkUserAuth(id, pwd);
+        if (!user.valid) return res.json({ success: false, message: user.msg });
+        
+        applicantName = user.name; // 실제 이름 확보
+    } else {
+        // 만약 토요일 오픈 전 에러 메시지가 있다면 출력
+        if (master.msg) return res.json({ success: false, message: master.msg });
     }
 
-    // [STEP 2: 본인 확인] 회원 테이블(users)에서 학번과 비밀번호가 일치하는지 확인합니다.
-    const authSql = `SELECT * FROM users WHERE student_id = ? AND password = ?`;
-    db.query(authSql, [id, pwd], (err, users) => {
-        if (err) return res.status(500).json({ success: false, message: '서버 에러(인증)' });
-        if (users.length === 0) {
-            return res.json({ success: false, message: '비밀번호가 틀렸거나 없는 학번입니다.' });
-        }
+    // --- 최종 저장 로직 (마스터든 유저든 여기로 옴) ---
+    const dupSql = `SELECT * FROM applications WHERE student_id = ? AND day = ? AND category = ?`;
+    db.query(dupSql, [id, day, category], (err, rows) => {
+        if (rows.length > 0) return res.json({ success: false, message: "이미 신청 내역이 있습니다." });
 
-        // 인증 성공 시, DB에 등록된 회원의 진짜 이름을 가져옵니다.
-        const realName = users[0].name;
-
-        // [STEP 3: 중복 신청 검사] 같은 요일에 동일한 카테고리로 이미 신청했는지 확인합니다.
-        const dupSql = `SELECT * FROM applications WHERE student_id = ? AND day = ? AND category = ?`;
-        
-        db.query(dupSql, [id, day, category], (dupErr, dupRows) => {
-            if (dupErr) return res.status(500).json({ success: false, message: '중복 확인 중 에러' });
-
-            // 기존 신청 내역이 이미 존재한다면 중복으로 간주하고 중단합니다.
-            if (dupRows.length > 0) {
-                const korCategory = (category === 'exercise') ? '운동' : (category === 'guest' ? '게스트' : '레슨');
-                return res.json({ success: false, message: `이미 [${day} ${korCategory}] 신청 내역이 있습니다.` });
-            }
-
-            // [STEP 4: 최종 저장] 모든 검사를 통과했으므로 신청 내역 테이블(applications)에 저장합니다.
-            const insertSql = `INSERT INTO applications (student_id, day, category, guest_name) VALUES (?, ?, ?, ?)`;
-            
-            db.query(insertSql, [id, day, category, name], (insertErr, result) => {
-                if (insertErr) return res.status(500).json({ success: false, message: '저장 에러' });
-
-                // 성공 결과와 함께 사용자 이름, 요일 등 UI 업데이트에 필요한 정보를 보냅니다.
-                res.json({ 
-                    success: true, 
-                    message: '신청이 완료되었습니다!',
-                    category: category, 
-                    userName: realName, 
-                    guestName: name, 
-                    day: day
-                });
-            });
+        const insertSql = `INSERT INTO applications (student_id, day, category, guest_name) VALUES (?, ?, ?, ?)`;
+        db.query(insertSql, [id, day, category, name], (err) => {
+            if (err) return res.status(500).json({ success: false, message: '저장 에러' });
+            res.json({ success: true, message: '신청 완료!', userName: applicantName });
         });
     });
 });
 
+
 // ---------------------------------------------------------
 // 3. [POST] /api/cancel : 신청 취소하기
 // ---------------------------------------------------------
-router.post('/cancel', (req, res) => {
+router.post('/cancel', async (req, res) => {
     const { id, pwd, category, day } = req.body;
 
-    // [STEP 1: 시간 검증] 취소가 가능한 시간대인지 먼저 확인합니다.
-    const timeCheck = checkTimeParams(day, category);
-    if (!timeCheck.valid) {
-        return res.json({ success: false, message: timeCheck.msg });
+    // [STEP 1] 마스터키 확인 (맞으면 통과)
+    const master = checkMasterAuth(pwd);
+    
+    // 마스터키가 아닐 때만 일반 검증 수행
+    if (!master.valid) {
+        // [STEP 2] 시간 검증 (일반 유저 전용)
+        const time = checkTimeParams(day, category);
+        if (!time.valid) return res.json({ success: false, message: time.msg });
+
+        // [STEP 3] 본인 확인 (일반 유저 전용)
+        const user = await checkUserAuth(id, pwd);
+        if (!user.valid) return res.json({ success: false, message: user.msg });
+    } else {
+        // 마스터키인데 만약 토요일 오픈 전 금지 조건에 걸렸다면 차단
+        if (master.msg) return res.json({ success: false, message: master.msg });
     }
 
-    // [STEP 2: 본인 확인] 본인의 신청 내역을 지우는 것이 맞는지 인증 과정을 거칩니다.
-    const authSql = `SELECT * FROM users WHERE student_id = ? AND password = ?`;
-    
-    db.query(authSql, [id, pwd], (err, users) => {
-        if (err) return res.status(500).json({ success: false, message: '서버 에러(인증)' });
-        if (users.length === 0) {
-            return res.json({ success: false, message: '비밀번호가 틀렸거나 없는 학번입니다.' });
+    // [STEP 4] 실제 삭제 진행 (마스터키 혹은 본인인증 통과자만 도달)
+    const deleteSql = `DELETE FROM applications WHERE student_id = ? AND category = ? AND day = ?`;
+
+    db.query(deleteSql, [id, category, day], (delErr, result) => {
+        if (delErr) return res.status(500).json({ success: false, message: '삭제 중 에러 발생' });
+
+        // 영향받은 행(affectedRows)이 0개면 해당 데이터가 없는 것
+        if (result.affectedRows === 0) {
+            return res.json({ success: false, message: '해당 요일에 신청한 내역이 없습니다.' });
         }
 
-        // [STEP 3: 삭제 진행] 학번, 요일, 종목이 모두 일치하는 행을 찾아 삭제합니다.
-        const deleteSql = `DELETE FROM applications WHERE student_id = ? AND category = ? AND day = ?`;
-
-        db.query(deleteSql, [id, category, day], (delErr, result) => {
-            if (delErr) return res.status(500).json({ success: false, message: '삭제 중 에러 발생' });
-
-            // 만약 삭제된 행(affectedRows)이 0개라면 신청 내역이 없다는 뜻입니다.
-            if (result.affectedRows === 0) {
-                return res.json({ success: false, message: '해당 요일에 신청한 내역이 없습니다.' });
-            }
-
-            console.log(`🗑️ [취소] 완료: ${id} (${category}, ${day})`);
-            res.json({ success: true, message: '취소가 완료되었습니다.' });
-        });
+        console.log(`🗑️ [취소 완료] ${master.valid ? '(마스터)' : '(본인)'} ID: ${id} 요일: ${day}`);
+        res.json({ success: true, message: '취소가 완료되었습니다.' });
     });
 });
 

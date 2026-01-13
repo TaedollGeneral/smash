@@ -10,6 +10,39 @@
  * @param {string} category - 신청 종목 ('exercise', 'lesson', 'guest')
  * @returns {object} - { valid: true/false, msg: "에러메시지" }
  */
+
+//------------------------------------------------------------------------
+// 1. 임원진 마스터키 검증 함수 (pwd)
+//------------------------------------------------------------------------
+
+function checkMasterAuth(pwd)
+{
+    const MASTER_KEY = "2026m";
+
+    if (pwd !== MASTER_KEY) return { valid: false };
+
+    const now = new Date();
+    const day = now.getDay();
+    const hour = now.getHours();
+
+    if(day === 6 && hour < 22)
+    {
+        return { valid: false, msg: "투표 오픈 전 마스터키 적용 불가" };
+    }
+    
+    return { valid: true};
+}
+
+
+
+
+
+
+
+//-------------------------------------------------------------------------
+// 2. 일반 회원용 "시간" 검증 함수 (요일, 카테고리)
+//-------------------------------------------------------------------------
+
 function checkTimeParams(targetDay, category) {
     // 현재 시스템 날짜와 시간 정보를 가져옵니다.
     const now = new Date();
@@ -71,8 +104,34 @@ function checkTimeParams(targetDay, category) {
     return { valid: true };
 }
 
+
+
+
+
+//-------------------------------------------------------------------------
+// 3. 일반 회원용 "pwd" 검증 함수
+//-------------------------------------------------------------------------
+const db = require('../config/db'); //본인 확인용 db 조회
+
+async function checkUserAuth(id, pwd)
+{
+    return new Promise((resolve) => {
+        const sql = `SELECT name FROM users WHERE student_id = ? AND password = ?`;
+        db.query(sql, [id, pwd], (err, users) => {
+            if(err) return resolve({ valid: false, msg: "서버 에러"});
+            if(users.length === 0) return resolve({ valid: false, msg: "비밀번호가 틀렸거나 등록되지 않은 학번입니다."});
+            resolve({ valid: true, name: users[0].name });
+        });
+    });
+}
+
+
+
+
+
+
 /**
  * 다른 파일(api.js 등)에서 이 함수를 불러와서 사용할 수 있도록 내보냅니다.
  * { checkTimeParams: checkTimeParams }의 줄임표현입니다.
  */
-module.exports = { checkTimeParams };
+module.exports = { checkTimeParams, checkMasterAuth, checkUserAuth };

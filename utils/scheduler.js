@@ -29,7 +29,7 @@ function startScheduler(){
      * '1 0 0 * * 1' 의미: 매분(1초), 매시(0분), 매일(0시), 매달(*), 요일(1=월요일)
      * 즉, 매주 월요일 새벽 00시 00분 01초에 정확히 실행됩니다.
      */
-    schedule.scheduleJob('1 0 0 * * 1', function() {
+    schedule.scheduleJob('1 0 0 * * 6', function() {
         console.log('⏰ [스케줄러] 주간 초기화 작업 시작...');
 
         // --- [STEP 1: 설정 읽기] ---
