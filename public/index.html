@@ -2,12 +2,14 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SMASH 운동 투표</title>
 
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#007bff">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/192/3556/3556943.png">
+
+    <meta name="mobile-web-app-capable" content="yes">
 
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -88,8 +90,8 @@
 
     <div class="control-panel">
         <div class="input-group">
-            <input type="text" name="id" id="user-id" placeholder="학번" required>
-            <input type="password" name="pwd" id="user-pwd" placeholder="비번" required>
+            <input type="text" name="id" id="user-id" placeholder="ID" required>
+            <input type="password" name="pwd" id="user-pwd" placeholder="PWD" required>
             <select name="category" id="category-select">
                 <option value="exercise">운동</option>
                 <option value="guest">게스트</option>

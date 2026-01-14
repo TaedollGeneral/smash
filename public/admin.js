@@ -140,10 +140,10 @@ async function copyCurrentStatus() {
             text += '\n\n';
         }
 
-        text += `📍임원진\n\n\n`;
+        text += `📍임원진\n\n\n\n`;
         
         if (finalGuests.length > 0) {
-            text += `📍게스트\n`;
+            text += `📍게스트\n\n`;
             finalGuests.forEach((item, idx) => {
                 const gName = item.guest_name || "이름없음"; // 게스트 본인 이름
                 text += gName.padEnd(5, ' '); 

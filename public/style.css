@@ -23,12 +23,13 @@ body {
     font-family: 'Pretendard', 'Malgun Gothic', -apple-system, sans-serif;
     background-color: #f0f2f5;
     margin: 0;
-    padding: 10px;
-    height: 100vh;
+    padding: 10px 10px env(safe-area-inset-bottom, 10px) 10px;
+    height: 100dvh;
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
     gap: 10px; 
+    overflow: hidden;
 }
 
 /* ---------------------------------------------------------
@@ -101,6 +102,7 @@ body {
     background-color: #333; color: white; padding: 10px 15px; border-radius: 10px;
     display: flex; align-items: center; justify-content: space-between;
     flex-wrap: wrap; gap: 10px; flex-shrink: 0;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom));
 }
 
 .input-group { display: flex; align-items: center; gap: 8px; }
@@ -251,4 +253,21 @@ h3 { margin: 0 0 10px 0; font-size: 16px; border-bottom: 2px solid #007bff; disp
 .admin-actions button {
     width: 100%; padding: 12px; background-color: #28a745; color: white;
     border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 5px;
+}
+
+
+
+/* 아코디언 pc 설정 무효화 */
+/* [PC 전용 설정] 화면이 769px 이상일 때(PC) 적용 */
+@media (min-width: 769px) {
+    /* 1. 화살표 아이콘 숨기기 */
+    .arrow {
+        display: none !important;
+    }
+
+    /* 2. PC에서는 마우스 커서가 손가락 모양(👆)으로 안 바뀌게 설정 */
+    .accordion-header {
+        cursor: default !important;
+        pointer-events: none; /* 클릭 자체를 무효화 */
+    }
 }
