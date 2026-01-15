@@ -169,11 +169,27 @@ h3 { margin: 0 0 10px 0; font-size: 16px; display: inline-block; }
         height: 45px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; flex-shrink: 0;
     }
 
+    .arrow {
+    display: inline-block;
+    width: 8px;             /* 너비 */
+    height: 8px;            /* 높이 */
+    border-right: 2px solid #aaa; /* 오른쪽 테두리 */
+    border-bottom: 2px solid #aaa; /* 아래쪽 테두리 */
+    margin-left: 10px;      /* 텍스트와의 간격 */
+    
+    /* 기본 상태(펼쳐짐): 위쪽(^)을 향하도록 회전 */
+    transform: rotate(225deg); 
+    transition: transform 0.3s ease; /* 부드러운 회전 애니메이션 */
+}
+
     .accordion-item.collapsed .accordion-content { display: none !important; }
 
     .accordion-content { flex: 1; overflow-y: auto; padding-bottom: 10px; }
 
-    .accordion-item.collapsed .arrow { transform: rotate(180deg); }
+    .accordion-item.collapsed .arrow 
+    {
+        transform: rotate(45deg); 
+    }
 
     .hidden { display: none !important; }
 
