@@ -15,7 +15,7 @@ function closeAdminAuth() {
     document.getElementById('master-key-input').value = '';
 }
 
-// 3. 마스터키 검증
+// 3. 마스터키 검증 ->백엔드로 이사 필요!!!!
 async function verifyMasterKey() {
     const inputKey = document.getElementById('master-key-input').value;
 
@@ -49,6 +49,7 @@ function closeAdminMode() {
 }
 
 
+//****코드 수정 필요!!!!!!!!!!!!!!!!! 그냥 현재 날짜 기준으로 수 , 금 며칠인지 계산하도록 바꾸자 */
 /**
  * 5. 날짜 계산기 함수
  * 현재 주차(week)와 선택된 요일(currentDay)을 바탕으로 실제 날짜를 반환함
@@ -86,6 +87,8 @@ function getTargetDate(week, day) {
  * script.js에 있는 currentDay 변수를 그대로 사용하여 현재 화면의 명단을 가공함
  */
 async function copyCurrentStatus() {
+    let finalText = ""; // [수정] 에러 발생 시에도 텍스트를 살리기 위해 변수를 밖으로 뺌
+
     try {
         const [infoRes, statusRes] = await Promise.all([
             fetch('/api/info'),
@@ -180,24 +183,57 @@ async function copyCurrentStatus() {
             }
         }
 
-        const finalText = text.trim();
+        finalText = text.trim();
 
-        // --- 복사 실행 ---
+        // --- [수정] 복사 실행 (아이폰 대응 강화) ---
+        
+        // 시도 1: 최신 API 시도 (비동기 처리로 인해 아이폰에서 실패할 확률 있음 -> catch로 넘김)
         if (window.isSecureContext && navigator.clipboard && navigator.clipboard.writeText) {
-            await navigator.clipboard.writeText(finalText);
-            alert("📋 명단이 복사되었습니다!");
-        } else {
-            const textArea = document.createElement("textarea");
-            textArea.value = finalText;
-            document.body.appendChild(textArea);
-            textArea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textArea);
-            alert("📋 명단이 복사되었습니다! (보안 우회)");
+            try {
+                await navigator.clipboard.writeText(finalText);
+                alert("📋 명단이 복사되었습니다!");
+                return; // 성공 시 종료
+            } catch (err) {
+                // 아이폰 등에서 권한 문제로 실패 시 아래 '시도 2'로 넘어감
+                console.warn("Clipboard API 실패, fallback 시도");
+            }
+        }
+
+        // 시도 2: 전통적인 textarea 방식 (아이폰 호환 코드 추가)
+        const textArea = document.createElement("textarea");
+        textArea.value = finalText;
+        
+        // [iOS 대응] 키보드 올라옴 방지 및 선택 영역 확보
+        textArea.setAttribute('readonly', ''); 
+        textArea.style.position = 'absolute';
+        textArea.style.left = '-9999px';
+        document.body.appendChild(textArea);
+
+        // [iOS 대응] 단순 select() 대신 Range 사용
+        const range = document.createRange();
+        range.selectNodeContents(textArea);
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+        textArea.setSelectionRange(0, 999999); // 아이폰 필수: 전체 선택 강제
+
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textArea);
+
+        if (successful) {
+            alert("📋 명단이 복사되었습니다! (구형 방식)");
+            } else {
+            throw new Error("자동 복사 실패");
         }
 
     } catch (err) {
         console.error(err);
-        alert("오류가 발생했습니다.");
+        // [최후의 수단] 모든 자동 복사가 실패했을 때 (특히 아이폰)
+        // 사용자가 직접 복사할 수 있도록 prompt 창에 텍스트를 띄워줌
+        if (finalText) {
+            prompt("📱 아이폰 보안상 자동 복사가 차단되었습니다.\n아래 텍스트를 전체 선택하여 복사하세요!", finalText);
+        } else {
+            alert("오류가 발생했습니다.");
+        }
     }
 }
