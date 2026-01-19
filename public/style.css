@@ -339,3 +339,9 @@ h3 { margin: 0 0 10px 0; font-size: 16px; display: inline-block; }
         overflow-y: auto; /* 내용물만 스크롤 */
     }
 }
+
+.title-adjust {
+    position: relative;
+    top: 2px;        /* 숫자가 클수록 더 많이 내려갑니다 (1px ~ 3px 추천) */
+    margin-left: 2px; /* 이모티콘이랑 너무 딱 붙지 않게 살짝 띄움 */
+}
