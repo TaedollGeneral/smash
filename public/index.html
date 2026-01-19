@@ -12,7 +12,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-    <link rel="stylesheet" href="style.css?v=final_fix_01">
+    <link rel="stylesheet" href="style.css?v=final_02">
 </head>
 <body>
 
@@ -22,9 +22,8 @@
                 <h2 class="title1">2026 SMASH</h2>
                 <h4 class="title">로딩 중...</h4> 
             </div>
+            <div class="divider"></div>
         </div>
-
-        <div class="divider"></div>
 
         <div class="day-toggle">
             <button class="day-btn active" onclick="selectDay('WED', this)">수</button>
@@ -35,7 +34,7 @@
     <div class="dashboard-area">
         <div class="left-panel accordion-item" id="exercise-panel">
             <div class="accordion-header" onclick="toggleAccordion('exercise-panel')">
-                <h3>🏸 운동</h3>
+                <h3>🏸 운동 명단</h3>
                 <div class="header-right">
                     <div id="timer-exercise" class="timer-container"></div>
                     <span class="arrow"></span>
@@ -72,7 +71,7 @@
 
             <div class="sub-panel accordion-item" id="lesson-panel">
                 <div class="accordion-header" onclick="toggleAccordion('lesson-panel')">
-                    <h3>📋 레슨</h3>
+                    <h3>📋 레슨 명단</h3>
                     <div class="header-right">
                         <div id="timer-lesson" class="timer-container"></div>
                         <span class="arrow"></span>
@@ -133,6 +132,7 @@
             <button id="dashboard-close-btn" style="background:none; border:none; font-size:20px; cursor:pointer;">✕</button>
         </div>
         <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
+        
         <div class="admin-menu-grid" style="display: flex; flex-direction: column; gap: 10px;">
             <div class="menu-item">
                 <div style="display: flex; gap: 5px; margin-bottom: 5px;">
@@ -164,9 +164,9 @@
         </div>
     </div>
 
-    <script src="js/script.js?v=final_fix_01"></script>
-    <script src="js/admin-auth.js?v=final_fix_01"></script>
-    <script src="js/admin-dashboard.js?v=final_fix_01"></script>
+    <script src="js/script.js?v=final_02"></script>
+    <script src="js/admin-auth.js?v=final_02"></script>
+    <script src="js/admin-dashboard.js?v=final_02"></script>
 
 </body>
 </html>

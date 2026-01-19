@@ -205,67 +205,77 @@ h3 { margin: 0 0 10px 0; font-size: 16px; display: inline-block; }
    7. [관리자 및 신규 UI 스타일] (2026.01.20 최종 수정본)
    --------------------------------------------------------- */
 
-/* [헤더] 구분선 복구 */
+/* [헤더] 상단 구분선 (SMASH 옆) */
 .divider {
     width: 1px;
-    height: 24px; /* 높이 적당히 조절 */
+    height: 20px;       /* 높이 적당히 */
     background-color: #e5e7eb;
-    margin: 0 15px; /* 좌우 여백 */
+    margin: 0 15px;     /* 좌우 여백 */
+    display: block;     /* 숨겨지지 않게 강제 */
 }
 
-/* [아코디언 헤더] 좌우 정렬을 위한 설정 */
+/* [아코디언 헤더] 좌우 정렬 보장 */
 .accordion-header {
-    height: 50px; /* 터치 영역 확보 */
+    height: 50px;
     display: flex;
-    justify-content: space-between; /* 양 끝 정렬 */
+    justify-content: space-between; /* 양 끝 배치를 위해 필수 */
     align-items: center;
     cursor: pointer;
     flex-shrink: 0;
-    padding: 0 5px; /* 내부 여백 미세 조정 */
+    padding: 0 5px;
+    width: 100%;       /* 너비 꽉 채우기 */
+    box-sizing: border-box;
 }
 
-/* 오른쪽 그룹 (타이머 + 화살표) */
+/* 헤더 내 제목 (왼쪽) */
+.accordion-header h3 {
+    margin: 0;
+    white-space: nowrap; /* 줄바꿈 방지 */
+}
+
+/* 헤더 내 오른쪽 그룹 (타이머 + 화살표) */
 .header-right {
     display: flex;
     align-items: center;
-    gap: 10px; /* 타이머와 화살표 사이 간격 */
+    gap: 12px;
+    margin-left: auto; /* 왼쪽 요소 밀어내고 오른쪽 붙기 */
 }
 
-/* [타이머 컨테이너] 디자인 개선 */
+/* [타이머 컨테이너] 디자인 개선 (구분선 길이 고정) */
 .timer-container {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: flex-end; /* 오른쪽 정렬 (라벨/시간 맞춤) */
+    align-items: flex-end; /* 텍스트 오른쪽 정렬 */
     
-    /* 구분선 디자인 (PC/모바일 공통 깔끔하게) */
+    /* 구분선 디자인 */
     border-left: 1px solid #ddd;
     padding-left: 12px;
-    height: 32px; /* 높이 고정 (구분선 길이 제한) */
+    height: 30px; /* 높이 고정 (너무 길어지지 않게) */
 }
 
 /* 1) 윗줄: 라벨 */
 .timer-label {
-    font-size: 10px; /* 더 작게 */
+    font-size: 10px;
     color: #999;
     font-weight: normal;
     margin-bottom: 2px;
     line-height: 1;
 }
 
-/* 2) 아랫줄: 시간 */
+/* 2) 아랫줄: 시간 (15px로 축소) */
 .timer-number {
-    font-size: 15px;        /* 요청하신 대로 크기 축소 (19px -> 15px) */
+    font-size: 15px;
     font-family: monospace;
     font-weight: 700;
     letter-spacing: -0.3px;
     line-height: 1;
 }
 
-/* 상태별 색상 */
+/* 상태별 색상 (애니메이션 제거) */
 .text-gray { color: #aaa; }
 .text-green { color: #28a745; }
-.text-orange { color: #fd7e14; }
+.text-orange { color: #fd7e14; animation: none !important; } /* 깜빡임 원천 차단 */
 
 
 /* [관리자 버튼 & 모달] */
@@ -310,8 +320,22 @@ h3 { margin: 0 0 10px 0; font-size: 16px; display: inline-block; }
 .admin-menu-grid { padding: 10px 0; }
 .menu-item { margin-bottom: 15px; }
 
-/* PC 전용 설정 */
+/* PC 전용 설정: 패널 높이 문제 해결 */
 @media (min-width: 769px) {
     .arrow { display: none !important; }
     .accordion-header { cursor: default !important; pointer-events: none; }
+    
+    /* PC에서 패널이 너무 길어지거나 깨지는 것 방지 */
+    .dashboard-area {
+        overflow: hidden; /* 전체 영역 스크롤 방지 */
+    }
+    .left-panel, .sub-panel {
+        height: 100%; /* 부모 높이만큼만 차지 */
+        display: flex;
+        flex-direction: column;
+    }
+    .accordion-content {
+        flex: 1;
+        overflow-y: auto; /* 내용물만 스크롤 */
+    }
 }
