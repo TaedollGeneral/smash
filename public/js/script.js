@@ -8,12 +8,20 @@ let timerCache = {};
 let timerInterval = null; 
 
 const els = {
+    // 타이머 컨테이너
     timerExercise: document.getElementById('timer-exercise'),
     timerGuest: document.getElementById('timer-guest'),
     timerLesson: document.getElementById('timer-lesson'),
+    
+    // 패널 자체 (금요일 숨김 처리를 위해)
+    panelLesson: document.getElementById('lesson-panel'),
+
+    // 리스트 바디
     listExercise: document.getElementById('exercise-list'),
     listGuest: document.getElementById('guest-list'),
     listLesson: document.getElementById('lesson-list'),
+    
+    // 입력 폼
     idInput: document.getElementById('user-id'),
     pwdInput: document.getElementById('user-pwd'),
     catSelect: document.getElementById('category-select'),
@@ -57,6 +65,13 @@ function startLocalCountdown() {
 }
 
 function updateTimerUI() {
+    // [수정] 금요일이면 레슨 패널 자체를 숨김
+    if (currentDay === 'FRI') {
+        if(els.panelLesson) els.panelLesson.style.display = 'none';
+    } else {
+        if(els.panelLesson) els.panelLesson.style.display = 'flex'; // 원래 스타일 복구
+    }
+
     if (!timerCache || Object.keys(timerCache).length === 0) return;
 
     const keys = {
@@ -68,16 +83,12 @@ function updateTimerUI() {
     renderSingleTimer(els.timerExercise, timerCache[keys.exercise]);
     renderSingleTimer(els.timerGuest, timerCache[keys.guest]);
 
-    if (currentDay === 'FRI') {
-        els.timerLesson.innerHTML = ""; // innerHTML로 초기화
-    } else {
+    // 레슨 타이머는 수요일에만 그림
+    if (currentDay !== 'FRI') {
         renderSingleTimer(els.timerLesson, timerCache[keys.lesson]);
     }
 }
 
-/**
- * [핵심 수정] 2단 구조(라벨 + 시간)로 렌더링
- */
 function renderSingleTimer(element, data) {
     if (!element || !data) return;
 
@@ -91,19 +102,18 @@ function renderSingleTimer(element, data) {
     let labelText = "";
     let colorClass = "text-gray"; 
 
-    // 상태별 라벨 텍스트 결정
     switch (data.state) {
         case 'OPEN_WAIT':
-            labelText = "오픈까지";
+            labelText = "투표 오픈까지";
             colorClass = "text-gray";
             break;
         case 'CLOSING':
-            labelText = "투표 마감까지"; // 사진 속 그 멘트!
-            colorClass = "text-green"; // 사진 속 그 초록색!
+            labelText = "투표 마감까지"; 
+            colorClass = "text-green"; 
             break;
         case 'CANCEL_CLOSING':
             labelText = "취소 마감까지";
-            colorClass = "text-orange"; 
+            colorClass = "text-red"; 
             break;
         case 'ENDED':
             labelText = "상태";
@@ -111,12 +121,9 @@ function renderSingleTimer(element, data) {
             break;
     }
 
-    // 마감된 경우 시간 대신 '마감됨' 표시
     const displayTime = (data.state === 'ENDED') ? "마감됨" : timeStr;
 
-    // [중요] HTML 구조를 통째로 교체 (구분선은 CSS border-left로 처리됨)
-    // 기존의 span class="timer-text"를 덮어쓰고 새로운 구조를 만듭니다.
-    element.className = "timer-container"; // CSS에서 만든 그 클래스 적용
+    // [중요] HTML 구조 업데이트
     element.innerHTML = `
         <div class="timer-label">${labelText}</div>
         <div class="timer-number ${colorClass}">${displayTime}</div>
@@ -129,7 +136,6 @@ function formatTime(ms) {
     const h = Math.floor(totalSec / 3600);
     const m = Math.floor((totalSec % 3600) / 60);
     const s = totalSec % 60;
-    // 시:분:초 (00:00:00)
     return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 }
 
@@ -138,12 +144,16 @@ function selectDay(day, btnElement) {
     document.querySelectorAll('.day-btn').forEach(b => b.classList.remove('active'));
     if (btnElement) btnElement.classList.add('active');
     fetchStatus();   
-    updateTimerUI(); 
+    updateTimerUI(); // UI 즉시 갱신 (패널 숨김/표시 적용)
 }
 
+/**
+ * [수정] 아코디언 토글 로직 수정
+ * active가 아니라 collapsed 클래스를 토글해야 CSS랑 맞음
+ */
 function toggleAccordion(panelId) {
     const panel = document.getElementById(panelId);
-    panel.classList.toggle('active');
+    panel.classList.toggle('collapsed');
 }
 
 function toggleGuestInput() {

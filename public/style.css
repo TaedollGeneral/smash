@@ -202,51 +202,79 @@ h3 { margin: 0 0 10px 0; font-size: 16px; display: inline-block; }
 }
 
 /* ---------------------------------------------------------
-   7. [관리자 및 신규 UI 스타일] (2026.01.20 수정본)
+   7. [관리자 및 신규 UI 스타일] (2026.01.20 최종 수정본)
    --------------------------------------------------------- */
 
-/* [타이머 컨테이너] 제목 옆에 붙는 박스 */
+/* [헤더] 구분선 복구 */
+.divider {
+    width: 1px;
+    height: 24px; /* 높이 적당히 조절 */
+    background-color: #e5e7eb;
+    margin: 0 15px; /* 좌우 여백 */
+}
+
+/* [아코디언 헤더] 좌우 정렬을 위한 설정 */
+.accordion-header {
+    height: 50px; /* 터치 영역 확보 */
+    display: flex;
+    justify-content: space-between; /* 양 끝 정렬 */
+    align-items: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    padding: 0 5px; /* 내부 여백 미세 조정 */
+}
+
+/* 오른쪽 그룹 (타이머 + 화살표) */
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* 타이머와 화살표 사이 간격 */
+}
+
+/* [타이머 컨테이너] 디자인 개선 */
 .timer-container {
     display: flex;
-    flex-direction: column;     /* 위아래 2줄 배치 */
+    flex-direction: column;
     justify-content: center;
-    align-items: flex-start;    /* 왼쪽 정렬 */
-    margin-left: 12px;          /* 제목과의 간격 */
-    padding-left: 12px;         /* 구분선과의 간격 */
-    border-left: 1px solid #ccc;/* [핵심] 회색 구분선 (|) */
-    line-height: 1.1;           /* 줄 간격 좁게 */
+    align-items: flex-end; /* 오른쪽 정렬 (라벨/시간 맞춤) */
+    
+    /* 구분선 디자인 (PC/모바일 공통 깔끔하게) */
+    border-left: 1px solid #ddd;
+    padding-left: 12px;
+    height: 32px; /* 높이 고정 (구분선 길이 제한) */
 }
 
-/* 1) 윗줄: 라벨 (예: 투표 마감까지) */
+/* 1) 윗줄: 라벨 */
 .timer-label {
-    font-size: 11px;
-    color: #888;
+    font-size: 10px; /* 더 작게 */
+    color: #999;
     font-weight: normal;
     margin-bottom: 2px;
+    line-height: 1;
 }
 
-/* 2) 아랫줄: 시간 (예: 00:00:00) */
+/* 2) 아랫줄: 시간 */
 .timer-number {
-    font-size: 19px;        /* 큼직한 폰트 복구! */
-    font-family: monospace; /* 숫자 간격 일정하게 */
-    font-weight: 700;       /* 두껍게 */
-    letter-spacing: -0.5px;
+    font-size: 15px;        /* 요청하신 대로 크기 축소 (19px -> 15px) */
+    font-family: monospace;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    line-height: 1;
 }
 
-/* 상태별 색상 (숫자에만 적용됨) */
+/* 상태별 색상 */
 .text-gray { color: #aaa; }
 .text-green { color: #28a745; }
 .text-orange { color: #fd7e14; }
 
 
-/* [관리자 버튼] ⚙️ 아이콘 */
+/* [관리자 버튼 & 모달] */
 .admin-btn {
     background: none; border: none; border-radius: 5px; padding: 8px 12px;
     cursor: pointer; font-size: 18px; color: white; outline: none; transition: all 0.3s;
 }
 .admin-btn:hover { background-color: rgba(255, 255, 255, 0.1); }
 
-/* [모달 공통] 관리자 인증 & 대시보드 레이어 */
 .admin-layer {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0, 0, 0, 0.6); z-index: 9999;
@@ -271,7 +299,6 @@ h3 { margin: 0 0 10px 0; font-size: 16px; display: inline-block; }
 #auth-cancel-btn { background: #eee; color: #333; }
 #auth-confirm-btn { background: #007bff; color: white; font-weight: bold; }
 
-/* 대시보드 패널 (중앙 팝업) */
 #admin-dashboard-panel {
     position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
     width: 90%; max-width: 400px; background: white;
@@ -283,6 +310,7 @@ h3 { margin: 0 0 10px 0; font-size: 16px; display: inline-block; }
 .admin-menu-grid { padding: 10px 0; }
 .menu-item { margin-bottom: 15px; }
 
+/* PC 전용 설정 */
 @media (min-width: 769px) {
     .arrow { display: none !important; }
     .accordion-header { cursor: default !important; pointer-events: none; }
