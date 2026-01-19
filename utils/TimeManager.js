@@ -7,6 +7,7 @@
  * 2. 시간 규칙: 카테고리별(수/금 운동, 게스트 등) 5가지 상세 오픈/마감 규칙 적용
  * 3. 상태 판별: 현재 시간이 오픈 전인지, 신청 마감인지, 취소 마감인지 초 단위 판별
  * 4. 명단 초기화: 시간 규칙이 수정될 경우, 해당 카테고리의 신청 명단을 DB에서 삭제
+ * 5. [수정] 마스터키 검증 함수 복구 완료
  * -----------------------------------------------------------------------------------------
  */
 
@@ -100,7 +101,7 @@ class TimeManager {
 
     /**
      * [API용] 5개 카테고리의 현재 상태를 한 번에 반환
-     * - 프론트엔드 타이머가 이 정보를 받아 화면을 그립니다.
+     * - 프론트엔드 타이머가 이 정보를 받아 화면에 그립니다.
      */
     getAllTimerStatus() {
         const result = {};
@@ -135,9 +136,6 @@ class TimeManager {
         }
         if (status.state === 'ENDED' || status.state === 'CANCEL_CLOSING') {
             // 신청 시점에서는 CANCEL_CLOSING 상태여도(취소만 가능하므로) 신규 신청은 막아야 함
-            // 즉, state가 CLOSING일 때만 신청 가능
-            // (단, '취소' 요청인지는 이 함수 밖 라우터에서 판단해야 함. 여기서는 시간만 체크)
-            
             // 좀 더 정밀하게: "지금은 신청 마감 시간 지났음"
             if (now > status.rule.closeTime) {
                 return { valid: false, msg: "신청이 마감되었습니다." };
@@ -198,7 +196,6 @@ class TimeManager {
 
     /**
      * [내부 로직] 규칙 가져오기 (오버라이드 vs 기본값)
-     * - 관리자가 수정한 값이 있으면(DB/Config) 그걸 쓰고, 없으면 하드코딩된 기본값을 계산해 반환
      */
     getRule(catId, day, type) {
         // 1. 오버라이드 값 확인
@@ -217,19 +214,16 @@ class TimeManager {
     }
 
     /**
-     * [기본 규칙 정의] 하드코딩된 시간 규칙 (태돌장군님 요청 사항 반영)
-     * - 현재 주차(week)를 기준으로 해당 주의 "수요일/금요일" 날짜를 구한 뒤, 역산하여 마감 시간을 정합니다.
+     * [기본 규칙 정의] 하드코딩된 시간 규칙
      */
     getDefaultRule(targetDay, type) {
-        // 1. 이번 주 해당 요일의 '활동 날짜(Activity Date)' 구하기
-        // 공식: 기준일(1/5) + (주차-1)*7 + 요일오프셋(수=2, 금=4)
+        // 1. 이번 주 해당 요일의 '활동 날짜' 구하기
         const currentWeek = this.config.system.week;
         const start = new Date(START_DATE_STRING);
         const dayOffset = (targetDay === 'WED') ? 2 : 4;
         
         const activityDate = new Date(start);
         activityDate.setDate(start.getDate() + (currentWeek - 1) * 7 + dayOffset);
-        // activityDate는 해당 주의 수요일 또는 금요일 00:00:00 상태임
 
         // 2. 규칙 적용 (날짜 연산)
         let openTime = new Date(activityDate);
@@ -237,8 +231,6 @@ class TimeManager {
         let cancelTime = new Date(activityDate);
 
         // [공통] 오픈 시간: 전주 토요일 22:00
-        // 수요일 기준: 수 - 4일 = 전주 토
-        // 금요일 기준: 금 - 6일 = 전주 토
         const openOffset = (targetDay === 'WED') ? -4 : -6;
         openTime.setDate(activityDate.getDate() + openOffset);
         openTime.setHours(22, 0, 0, 0);
@@ -247,35 +239,27 @@ class TimeManager {
         // [개별 마감 규칙 적용]
         if (targetDay === 'WED') {
             if (type === 'guest') {
-                // [수요일 게스트]
-                // 신청 마감: 수요일 18:00 (당일)
+                // 수요일 게스트: 수 18:00 신청마감, 수 24:00 취소마감
                 closeTime.setHours(18, 0, 0, 0);
-                // 취소 마감: 수요일 24:00 (다음날 00:00)
                 cancelTime.setDate(activityDate.getDate() + 1);
                 cancelTime.setHours(0, 0, 0, 0);
             } else {
-                // [수요일 운동/레슨]
-                // 신청 마감: 일요일 22:00 (전주 일요일) -> 수 - 3일
+                // 수요일 운동/레슨: 일 22:00 신청마감, 화 24:00 취소마감
                 closeTime.setDate(activityDate.getDate() - 3);
                 closeTime.setHours(22, 0, 0, 0);
-                // 취소 마감: 화요일 24:00 (수요일 00:00) -> 수요일 시작 시점
                 cancelTime.setHours(0, 0, 0, 0); // 당일 00시가 곧 전날 24시
             }
         } 
         else if (targetDay === 'FRI') {
             if (type === 'guest') {
-                // [금요일 게스트]
-                // 신청 마감: 금요일 17:00 (당일)
+                // 금요일 게스트: 금 17:00 신청마감, 금 24:00 취소마감
                 closeTime.setHours(17, 0, 0, 0);
-                // 취소 마감: 금요일 24:00 (다음날 00:00)
                 cancelTime.setDate(activityDate.getDate() + 1);
                 cancelTime.setHours(0, 0, 0, 0);
             } else {
-                // [금요일 운동]
-                // 신청 마감: 일요일 22:00 (전주 일요일) -> 금 - 5일
+                // 금요일 운동: 일 22:00 신청마감, 목 24:00 취소마감
                 closeTime.setDate(activityDate.getDate() - 5);
                 closeTime.setHours(22, 0, 0, 0);
-                // 취소 마감: 목요일 24:00 (금요일 00:00) -> 당일 00시
                 cancelTime.setHours(0, 0, 0, 0);
             }
         }
@@ -289,11 +273,16 @@ class TimeManager {
     // =====================================================================================
 
     /**
+     * [중요] 마스터키 검증 함수 (누락되어 에러 발생했던 부분 복구)
+     */
+    checkMasterKey(inputKey) {
+        return inputKey === MASTER_KEY;
+    }
+
+    /**
      * [명단 초기화] 시간 규칙 수정 시 호출됨
-     * - 해당 카테고리의 명단만 DB에서 안전하게 삭제합니다.
      */
     async resetList(catId) {
-        // ID 파싱 (예: WED_EXERCISE -> day='WED', category='exercise')
         const parts = catId.split('_'); 
         const day = parts[0];
         const category = parts[1].toLowerCase();
@@ -303,7 +292,6 @@ class TimeManager {
         const sql = `DELETE FROM applications WHERE day = ? AND category = ?`;
         
         try {
-            // DB 풀을 이용해 비동기 삭제 수행
             const [result] = await db.promise().query(sql, [day, category]);
             console.log(`✅ 명단 삭제 완료. (삭제된 인원: ${result.affectedRows}명)`);
             return true;
@@ -341,5 +329,4 @@ class TimeManager {
     }
 }
 
-// 싱글톤으로 내보내기 (서버 전체에서 하나의 인스턴스 공유)
 module.exports = new TimeManager();
