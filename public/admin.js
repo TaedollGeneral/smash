@@ -124,9 +124,6 @@ async function copyCurrentStatus() {
         const remainingSeats = maxCap > 0 ? maxCap - finalMembers.length : 999;
         const finalGuests = remainingSeats > 0 ? allGuests.slice(0, remainingSeats) : [];
 
-        // [추가] 게스트 가나다순 정렬
-        finalGuests.sort((a, b) => a.guest_name.localeCompare(b.guest_name, 'ko'));
-
         // 3. 잔여석 계산
         const lastEmptySeats = maxCap > 0 ? (maxCap - (finalMembers.length + finalGuests.length)) : 0;
 
@@ -185,53 +182,38 @@ async function copyCurrentStatus() {
 
         finalText = text.trim();
 
-        // --- [수정] 복사 실행 (아이폰 대응 강화) ---
-        
-        // 시도 1: 최신 API 시도 (비동기 처리로 인해 아이폰에서 실패할 확률 있음 -> catch로 넘김)
+        // --- [복사 실행] ---
+        // 1. 자동 복사 시도 (PC, 안드로이드 등)
         if (window.isSecureContext && navigator.clipboard && navigator.clipboard.writeText) {
-            try {
-                await navigator.clipboard.writeText(finalText);
-                alert("📋 명단이 복사되었습니다!");
-                return; // 성공 시 종료
-            } catch (err) {
-                // 아이폰 등에서 권한 문제로 실패 시 아래 '시도 2'로 넘어감
-                console.warn("Clipboard API 실패, fallback 시도");
-            }
-        }
-
-        // 시도 2: 전통적인 textarea 방식 (아이폰 호환 코드 추가)
-        const textArea = document.createElement("textarea");
-        textArea.value = finalText;
+            await navigator.clipboard.writeText(finalText);
+            alert("📋 명단이 복사되었습니다!");
+            return;
+        } 
         
-        // [iOS 대응] 키보드 올라옴 방지 및 선택 영역 확보
-        textArea.setAttribute('readonly', ''); 
-        textArea.style.position = 'absolute';
-        textArea.style.left = '-9999px';
-        document.body.appendChild(textArea);
-
-        // [iOS 대응] 단순 select() 대신 Range 사용
-        const range = document.createRange();
-        range.selectNodeContents(textArea);
-        const selection = window.getSelection();
-        selection.removeAllRanges();
-        selection.addRange(range);
-        textArea.setSelectionRange(0, 999999); // 아이폰 필수: 전체 선택 강제
-
-        const successful = document.execCommand('copy');
-        document.body.removeChild(textArea);
-
-        if (successful) {
-            alert("📋 명단이 복사되었습니다! (구형 방식)");
-            } else {
-            throw new Error("자동 복사 실패");
-        }
+        // 2. 구형 방식 시도 (execCommand)
+        throw new Error("Clipboard API 미지원, fallback 이동");
 
     } catch (err) {
-        console.error(err);
-        // [최후의 수단] 모든 자동 복사가 실패했을 때 (특히 아이폰)
-        // 사용자가 직접 복사할 수 있도록 prompt 창에 텍스트를 띄워줌
-        if (finalText) {
-            prompt("📱 아이폰 보안상 자동 복사가 차단되었습니다.\n아래 텍스트를 전체 선택하여 복사하세요!", finalText);
+        console.warn("자동 복사 실패, 공유하기 모드로 전환합니다:", err);
+
+        // ----------------------------------------------------------------------
+        // [방법 1] 공유하기(Share) 기능 사용 (줄바꿈 완벽 지원 + 앱 느낌)
+        // ----------------------------------------------------------------------
+        if (navigator.share && finalText) {
+            try {
+                await navigator.share({
+                    title: 'SMASH 운동 명단',
+                    text: finalText
+                });
+                // 공유 창이 뜨면 성공으로 간주
+            } catch (shareErr) {
+                console.log("공유 취소됨:", shareErr);
+                // 사용자가 공유 창을 닫았거나 에러가 났을 때 최후의 수단으로 prompt
+                prompt("텍스트를 전체 선택하여 복사하세요:", finalText);
+            }
+        } else if (finalText) {
+            // 공유 기능이 없는 PC(일부) 등에서는 그냥 prompt
+            prompt("텍스트를 전체 선택하여 복사하세요:", finalText);
         } else {
             alert("오류가 발생했습니다.");
         }
