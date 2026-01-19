@@ -10,12 +10,9 @@
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/192/3556/3556943.png">
 
     <meta name="mobile-web-app-capable" content="yes">
-
-    <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="SMASH">
-    
-    <link rel="stylesheet" href="style.css">
+
+    <link rel="stylesheet" href="style.css?v=20260120">
 </head>
 <body>
 
@@ -23,15 +20,9 @@
         <div class="left-section">
             <div class="title-group">
                 <h2 class="title1">2026 SMASH</h2>
-                <h4 class="title"></h4> </div>
-
-            <div class="divider"></div>
-
-            <div class="timer-box">
-                <span id="status-text" class="timer-label">투표 오픈까지</span>
-                <span id="timer-display" class="timer-text text-green">00:00:00</span>
+                <h4 class="title">로딩 중...</h4> 
             </div>
-        </div>
+            </div>
 
         <div class="day-toggle">
             <button class="day-btn active" onclick="selectDay('WED', this)">수</button>
@@ -42,7 +33,10 @@
     <div class="dashboard-area">
         <div class="left-panel accordion-item" id="exercise-panel">
             <div class="accordion-header" onclick="toggleAccordion('exercise-panel')">
-                <h3>🏸 운동 명단</h3>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <h3>🏸 운동 명단</h3>
+                    <span id="timer-exercise" class="timer-text text-gray" style="font-size: 15px;">--:--:--</span>
+                </div>
                 <span class="arrow"></span>
             </div>
             <div class="accordion-content">
@@ -58,7 +52,10 @@
         <div class="right-panel-wrapper">
             <div class="sub-panel accordion-item" id="guest-panel">
                 <div class="accordion-header" onclick="toggleAccordion('guest-panel')">
-                    <h3>👥 게스트</h3>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <h3>👥 게스트</h3>
+                        <span id="timer-guest" class="timer-text text-gray" style="font-size: 15px;">--:--:--</span>
+                    </div>
                     <span class="arrow"></span>
                 </div>
                 <div class="accordion-content">
@@ -73,7 +70,10 @@
 
             <div class="sub-panel accordion-item" id="lesson-panel">
                 <div class="accordion-header" onclick="toggleAccordion('lesson-panel')">
-                    <h3>📋 레슨 명단</h3>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <h3>📋 레슨 명단</h3>
+                        <span id="timer-lesson" class="timer-text text-gray" style="font-size: 15px;">--:--:--</span>
+                    </div>
                     <span class="arrow"></span>
                 </div>
                 <div class="accordion-content">
@@ -90,9 +90,9 @@
 
     <div class="control-panel">
         <div class="input-group">
-            <input type="text" name="id" id="user-id" placeholder="ID" required>
-            <input type="password" name="pwd" id="user-pwd" placeholder="PWD" required>
-            <select name="category" id="category-select">
+            <input type="text" id="user-id" placeholder="ID" required>
+            <input type="password" id="user-pwd" placeholder="PWD" required>
+            <select id="category-select">
                 <option value="exercise">운동</option>
                 <option value="guest">게스트</option>
                 <option value="lesson">레슨</option>
@@ -105,50 +105,69 @@
                 <label class="radio-label"><input type="radio" name="action" value="cancel">취소</label>
             </div>
     
-            <input type="text" name="name" id="guest-name-input" placeholder="이름(게스트)" style="display:none;">
+            <input type="text" id="guest-name-input" placeholder="이름(게스트)" style="display:none;">
 
-            <div class="submit-group" style="display: flex; align-items: center; gap: 5px; flex: 1;">
-                <button type="button" onclick="openAdminAuth()" class="admin-btn" title="관리자 모드">
-                    ⚙️
-                </button>
-                <button type="button" class="submit-btn" onclick="submitForm()" style="flex: 1;">확인</button>
+            <div class="submit-group">
+                <button type="button" id="admin-auth-btn" class="admin-btn">⚙️</button>
+                <button type="button" class="submit-btn" onclick="submitForm()">확인</button>
             </div>
         </div>
     </div>
 
-    <div id="admin-auth-layer" class="admin-layer" style="display: none;">
+    <div id="admin-auth-modal" class="admin-layer" style="display: none;">
         <div class="admin-auth-box">
             <h4>🔑 임원진 인증</h4>
             <input type="password" id="master-key-input" placeholder="마스터키 입력">
             <div class="auth-btns">
-                <button onclick="closeAdminAuth()">취소</button>
-                <button onclick="verifyMasterKey()" class="btn-blue">확인</button>
+                <button id="auth-cancel-btn">취소</button>
+                <button id="auth-confirm-btn" class="btn-blue">확인</button>
             </div>
         </div>
     </div>
 
-    <div id="admin-panel" class="admin-panel" style="display: none;">
+    <div id="admin-dashboard-panel" class="admin-panel" style="display: none;">
         <div class="admin-header">
             <h4 style="margin: 0;">🛠️ 임원진 전용 도구</h4>
-            <button onclick="closeAdminMode()" style="background:none; border:none; font-size:20px; cursor:pointer;">✕</button>
+            <button id="dashboard-close-btn" style="background:none; border:none; font-size:20px; cursor:pointer;">✕</button>
         </div>
         <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
         
-        <div class="admin-inputs" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <label style="font-size: 14px; font-weight: bold; width: 70px; color: #333;">📌 정원:</label>
-                <input type="number" id="max-capacity" placeholder="(운동 정원) - (임원진)" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+        <div class="admin-menu-grid" style="display: flex; flex-direction: column; gap: 10px;">
+            <div class="menu-item">
+                <div style="display: flex; gap: 5px; margin-bottom: 5px;">
+                    <input type="number" id="max-capacity" placeholder="정원(명)" style="width: 80px; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                    <button id="btn-copy-list" style="flex: 1; background-color: #28a745; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer;">
+                        📋 명단 복사 & 공유
+                    </button>
+                </div>
             </div>
-        </div>
 
-        <div class="admin-actions">
-            <button onclick="copyCurrentStatus()" style="background-color: #28a745; width: 100%; padding: 12px; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">
-                📋 계산된 명단 복사
-            </button>
+            <div class="menu-item" style="border-top: 1px dashed #ddd; padding-top: 10px;">
+                <label style="font-size: 12px; color: #666; font-weight: bold;">학기 초기화 (개강)</label>
+                <div style="display: flex; gap: 5px; margin-top: 5px;">
+                    <select id="semester-select" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px; flex: 1;">
+                        <option value="1">1학기</option>
+                        <option value="여름">여름학기</option>
+                        <option value="2">2학기</option>
+                        <option value="겨울">겨울학기</option>
+                    </select>
+                    <button id="btn-reset-semester" style="background-color: #dc3545; color: white; border: none; border-radius: 5px; padding: 0 15px; font-weight: bold; cursor: pointer;">
+                        개강!
+                    </button>
+                </div>
+            </div>
+
+            <div class="menu-item" style="border-top: 1px dashed #ddd; padding-top: 10px;">
+                <button disabled style="width: 100%; background-color: #ccc; color: white; border: none; padding: 10px; border-radius: 5px; cursor: not-allowed;">
+                    ⏰ 오픈/마감 시간 수정 (준비중)
+                </button>
+            </div>
         </div>
     </div>
 
-    <script src="script.js?v=20260115"></script>
-    <script src="admin.js?v=20260115"></script>
+    <script src="js/script.js?v=new_struct_02"></script>
+    <script src="js/admin-auth.js?v=new_struct_02"></script>
+    <script src="js/admin-dashboard.js?v=new_struct_02"></script>
+
 </body>
 </html>

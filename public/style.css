@@ -202,88 +202,115 @@ h3 { margin: 0 0 10px 0; font-size: 16px; display: inline-block; }
 }
 
 /* ---------------------------------------------------------
-   7. [=== Admin Styles ===] 관리자 전용 스타일
+   7. [관리자 및 신규 UI 스타일] (2026.01.20 통합 수정본)
    --------------------------------------------------------- */
 
-/* ⚙️ 버튼 스타일 */
+/* [타이머] 명단 제목 옆으로 이동 (작은 사이즈) */
+.timer-text {
+    font-size: 0.9rem;       /* 글자 크기 축소 (기존 18px -> 약 14px) */
+    font-weight: normal;
+    margin-left: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background-color: #f8f9fa; /* 연한 회색 배경 */
+    font-family: monospace;    /* 숫자 간격 일정하게 */
+}
+
+/* 상태별 텍스트 색상 */
+.text-gray { color: #6c757d; }
+.text-green { color: #28a745; font-weight: bold; }
+.text-orange { color: #fd7e14; font-weight: bold; }
+
+/* [관리자 버튼] ⚙️ 아이콘 */
 .admin-btn {
     background: none; border: none; border-radius: 5px; padding: 8px 12px;
     cursor: pointer; font-size: 18px; color: white; outline: none; transition: all 0.3s;
 }
-
 .admin-btn:hover { background-color: rgba(255, 255, 255, 0.1); }
 
-/* 관리자 인증 레이어 (중앙 팝업) */
+
+/* =========================================================
+   [모달 공통] 관리자 인증 & 대시보드 레이어
+   ========================================================= */
+
+/* 배경 (검은 반투명 레이어) */
 .admin-layer {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 2000;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.6); /* 어두운 배경 */
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
+/* 1. 인증 박스 (작은 팝업) */
 .admin-auth-box {
-    background: white; padding: 25px; border-radius: 12px; width: 280px; text-align: center; color: #333;
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 320px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }
 
-.admin-auth-box h4 { margin: 0 0 15px 0;      /* 상단 마진을 없애고 하단에만 여백을 줌 (중앙 정렬 핵심) */
-    color: #111; 
-    font-size: 18px;
-    width: 100%;             /* 너비를 꽉 채워서 text-align이 정확히 먹게 함 */ 
+.admin-auth-box h4 {
+    margin-top: 0; margin-bottom: 20px;
+    font-size: 1.2rem; color: #333;
 }
 
 .admin-auth-box input {
-    width: 100%; 
-    padding: 12px; 
-    margin-bottom: 20px;     /* 버튼과의 간격 확보 */
-    border: 1px solid #ddd; 
-    border-radius: 6px; 
-    box-sizing: border-box; 
-    font-size: 16px;
-    text-align: center;      /* 입력하는 비밀번호도 한가운데 오게 하면 더 예쁨! */
+    width: 100%; padding: 12px; margin-bottom: 20px;
+    border: 1px solid #ddd; border-radius: 8px;
+    font-size: 16px; text-align: center;
+    box-sizing: border-box;
 }
 
 .auth-btns { display: flex; gap: 10px; }
+
 .auth-btns button {
-    flex: 1; padding: 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;
-}
-.btn-blue { background: #007bff; color: white; }
-
-/* 관리자 하단 패널 (슬라이드 업) */
-.admin-panel {
-    position: fixed; bottom: 0; left: 0; right: 0;
-    background: white; color: #333; box-shadow: 0 -5px 15px rgba(0,0,0,0.2);
-    border-radius: 20px 20px 0 0; padding: 20px 20px 30px 20px; z-index: 1000;
-    animation: slideUp 0.4s ease;
+    flex: 1; padding: 12px; border: none; border-radius: 8px;
+    font-size: 16px; cursor: pointer;
 }
 
-.admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+#auth-cancel-btn { background: #eee; color: #333; }
+#auth-confirm-btn { background: #007bff; color: white; font-weight: bold; }
 
-/* 관리자 입력창 스타일 보강 */
-.admin-inputs input {
-    font-size: 16px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; outline: none; transition: border-color 0.2s;
+
+/* 2. 대시보드 패널 (중앙 팝업 스타일) */
+/* 중요: 기존 .admin-panel 클래스와 충돌하지 않도록 ID 선택자로 강력하게 지정 */
+#admin-dashboard-panel {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%); /* 정확한 정중앙 배치 */
+    width: 90%;
+    max-width: 400px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    padding: 20px;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    
+    /* 기존 .admin-panel 스타일(bottom:0) 무력화 */
+    bottom: auto !important; 
+    animation: none; /* 슬라이드 업 애니메이션 제거 */
 }
 
-.admin-inputs input:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 0 2px rgba(0,123,255,0.1);
+.admin-header {
+    display: flex; justify-content: space-between; align-items: center;
 }
 
-.admin-actions button {
-    width: 100%; padding: 12px; background-color: #28a745; color: white;
-    border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 5px;
-}
+.admin-menu-grid { padding: 10px 0; }
+
+.menu-item { margin-bottom: 15px; }
 
 
-
-/* 아코디언 pc 설정 무효화 */
-/* [PC 전용 설정] 화면이 769px 이상일 때(PC) 적용 */
+/* [PC 전용 설정] 아코디언 펼침 고정 */
 @media (min-width: 769px) {
-    /* 1. 화살표 아이콘 숨기기 */
-    .arrow {
-        display: none !important;
-    }
-
-    /* 2. PC에서는 마우스 커서가 손가락 모양(👆)으로 안 바뀌게 설정 */
-    .accordion-header {
-        cursor: default !important;
-        pointer-events: none; /* 클릭 자체를 무효화 */
-    }
+    .arrow { display: none !important; }
+    .accordion-header { cursor: default !important; pointer-events: none; }
 }

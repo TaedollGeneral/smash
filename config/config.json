@@ -1,6 +1,24 @@
 {
-  "year": 2026,
-  "semester": "겨울",
-  "week": 2
+  "system": {
+    "year": 2026,
+    "semester": "겨울",
+    "week": 2
+  },
+  "overrides": {
+    "WED_EXERCISE_OPEN": null,
+    "WED_EXERCISE_CLOSE": null,
+    "WED_EXERCISE_CANCEL": null, 
+    "WED_GUEST_OPEN": null,
+    "WED_GUEST_CLOSE": null,
+    "WED_GUEST_CANCEL": null,
+    "WED_LESSON_OPEN": null,
+    "WED_LESSON_CLOSE": null,
+    "WED_LESSON_CANCEL": null,
+    "FRI_EXERCISE_OPEN": null,
+    "FRI_EXERCISE_CLOSE": null,
+    "FRI_EXERCISE_CANCEL": null,
+    "FRI_GUEST_OPEN": null,
+    "FRI_GUEST_CLOSE": null,
+    "FRI_GUEST_CANCEL": null
+  }
 }
-

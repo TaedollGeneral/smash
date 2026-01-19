@@ -1,56 +1,46 @@
 /**
  * [FILE: routes/api.js]
- * 역할: 신청, 취소, 조회 등 서비스의 핵심 기능을 담당하는 API 라우터입니다.
- * 주요 기능: 신청자 인증, 중복 검사, DB 기록, 실시간 현황 데이터 제공
+ * 역할: 프론트엔드와 서버의 소통 창구 (TimeManager 적용 완료)
  */
 
-
-
-
-// ---------------------------------------------------------
-// 1. 외부 모듈 및 설정 로드
-// ---------------------------------------------------------
 const express = require('express');
-const router = express.Router();              // Express의 라우터 시스템 사용
-const db = require('../config/db');           // 데이터베이스 연결 객체 로드
-const fs = require('fs');                     // 파일 읽기용 모듈
-const path = require('path');                 // 경로 조작용 도구
+const router = express.Router();
+const db = require('../config/db');
+const TimeManager = require('../utils/TimeManager'); // [핵심] TimeManager 연결
 
-// validator 호출
-const { checkTimeParams, checkMasterAuth, checkUserAuth, checkMasterKey } = require('../utils/validator');
+// ============================================================
+// [SECTION 1] 일반 사용자 기능 (신청/취소/조회)
+// ============================================================
 
-// 현재 파일 기준 상위 폴더의 config/config.json 경로 설정
-const configPath = path.join(__dirname, '..', 'config', 'config.json');
-
-
-
-
-// ---------------------------------------------------------
-// 2. [POST] /api/apply : 신청하기
-// ---------------------------------------------------------
+// 1. 신청하기
 router.post('/apply', async (req, res) => {
     const { id, pwd, category, name, day } = req.body;
 
-    // 1. 마스터키 확인 (맞으면 바로 통과)
-    const master = checkMasterAuth(pwd);
+    // 1-1. 마스터키 확인 (비번이 마스터키면 프리패스)
+    const isMaster = TimeManager.checkMasterKey(pwd);
     let applicantName = "관리자(대리)";
 
-    if (!master.valid) {
-        // 2. 시간 확인 (일반 유저일 때만)
-        const time = checkTimeParams(day, category);
-        if (!time.valid) return res.json({ success: false, message: time.msg });
+    if (!isMaster) {
+        // 1-2. [TimeManager] 신청 가능 시간인지 검증
+        const timeCheck = TimeManager.validateApplyTime(day, category);
+        if (!timeCheck.valid) {
+            return res.json({ success: false, message: timeCheck.msg });
+        }
 
-        // 3. 본인 확인 (일반 유저일 때만)
-        const user = await checkUserAuth(id, pwd);
-        if (!user.valid) return res.json({ success: false, message: user.msg });
-        
-        applicantName = user.name; // 실제 이름 확보
-    } else {
-        // 만약 토요일 오픈 전 에러 메시지가 있다면 출력
-        if (master.msg) return res.json({ success: false, message: master.msg });
+        // 1-3. 본인 확인 (DB 조회 - 기존 로직 유지)
+        // (validator.js가 사라졌으므로 checkUserAuth 로직을 여기로 가져오거나 별도 유틸로 분리해야 하지만,
+        //  편의상 여기에 직접 DB 조회를 구현하거나, 기존 validator의 checkUserAuth만 따로 살려두는 방법이 있음.
+        //  여기서는 '본인 확인' 로직을 간단하게 인라인으로 구현합니다.)
+        try {
+            const user = await checkUserAuth(id, pwd);
+            if (!user.valid) return res.json({ success: false, message: user.msg });
+            applicantName = user.name;
+        } catch (e) {
+            return res.json({ success: false, message: "DB 에러" });
+        }
     }
 
-    // --- 최종 저장 로직 (마스터든 유저든 여기로 옴) ---
+    // 1-4. 중복 검사 및 저장
     const dupSql = `SELECT * FROM applications WHERE student_id = ? AND day = ? AND category = ?`;
     db.query(dupSql, [id, day, category], (err, rows) => {
         if (rows.length > 0) return res.json({ success: false, message: "이미 신청 내역이 있습니다." });
@@ -63,54 +53,37 @@ router.post('/apply', async (req, res) => {
     });
 });
 
-
-// ---------------------------------------------------------
-// 3. [POST] /api/cancel : 신청 취소하기
-// ---------------------------------------------------------
+// 2. 취소하기
 router.post('/cancel', async (req, res) => {
     const { id, pwd, category, day } = req.body;
+    const isMaster = TimeManager.checkMasterKey(pwd);
 
-    // [STEP 1] 마스터키 확인 (맞으면 통과)
-    const master = checkMasterAuth(pwd);
-    
-    // 마스터키가 아닐 때만 일반 검증 수행
-    if (!master.valid) {
-        // [STEP 2] 시간 검증 (일반 유저 전용)
-        const time = checkTimeParams(day, category);
-        if (!time.valid) return res.json({ success: false, message: time.msg });
+    if (!isMaster) {
+        // 2-1. [TimeManager] 취소 가능 시간인지 검증
+        const timeCheck = TimeManager.validateCancelTime(day, category);
+        if (!timeCheck.valid) return res.json({ success: false, message: timeCheck.msg });
 
-        // [STEP 3] 본인 확인 (일반 유저 전용)
-        const user = await checkUserAuth(id, pwd);
-        if (!user.valid) return res.json({ success: false, message: user.msg });
-    } else {
-        // 마스터키인데 만약 토요일 오픈 전 금지 조건에 걸렸다면 차단
-        if (master.msg) return res.json({ success: false, message: master.msg });
+        // 2-2. 본인 확인
+        try {
+            const user = await checkUserAuth(id, pwd);
+            if (!user.valid) return res.json({ success: false, message: user.msg });
+        } catch (e) {
+            return res.json({ success: false, message: "DB 에러" });
+        }
     }
 
-    // [STEP 4] 실제 삭제 진행 (마스터키 혹은 본인인증 통과자만 도달)
+    // 2-3. 삭제
     const deleteSql = `DELETE FROM applications WHERE student_id = ? AND category = ? AND day = ?`;
-
-    db.query(deleteSql, [id, category, day], (delErr, result) => {
-        if (delErr) return res.status(500).json({ success: false, message: '삭제 중 에러 발생' });
-
-        // 영향받은 행(affectedRows)이 0개면 해당 데이터가 없는 것
-        if (result.affectedRows === 0) {
-            return res.json({ success: false, message: '해당 요일에 신청한 내역이 없습니다.' });
-        }
-
-        console.log(`🗑️ [취소 완료] ${master.valid ? '(마스터)' : '(본인)'} ID: ${id} 요일: ${day}`);
-        res.json({ success: true, message: '취소가 완료되었습니다.' });
+    db.query(deleteSql, [id, category, day], (err, result) => {
+        if (err) return res.status(500).json({ success: false, message: 'DB 에러' });
+        if (result.affectedRows === 0) return res.json({ success: false, message: '신청 내역이 없습니다.' });
+        res.json({ success: true, message: '취소 완료' });
     });
 });
 
-// ---------------------------------------------------------
-// 4. [GET] /api/status : 신청 현황 조회
-// ---------------------------------------------------------
+// 3. 현황 조회 (기존 유지)
 router.get('/status', (req, res) => {
-    // 쿼리 스트링으로 전달된 요일(?day=WED)을 받거나 기본값으로 WED를 사용합니다.
     const day = req.query.day || 'WED';
-
-    // 회원 테이블(users)과 조인하여 학번이 아닌 '이름'이 나오도록 쿼리합니다.
     const sql = `
         SELECT a.category, u.name as user_name, a.guest_name, a.student_id, a.created_at 
         FROM applications a
@@ -118,48 +91,82 @@ router.get('/status', (req, res) => {
         WHERE a.day = ? 
         ORDER BY a.created_at ASC
     `;
-
     db.query(sql, [day], (err, results) => {
-        if (err) {
-            console.error(err);
-            res.status(500).send('DB Error');
-        } else {
-            // 조회된 명단 데이터를 JSON 형태로 프론트엔드에 전달합니다.
-            res.json(results);
-        }
+        if (err) res.status(500).send('DB Error');
+        else res.json(results);
     });
 });
 
-// ---------------------------------------------------------
-// 5. [GET] /api/info : 현재 운영 정보(주차) 조회
-// ---------------------------------------------------------
-router.get('/info', (req, res) => {
-    try {
-        // config.json 파일을 읽어서 현재가 몇 주차인지 등의 정보를 제공합니다.
-        const configData = fs.readFileSync(configPath, 'utf8');
-        const config = JSON.parse(configData);
-        res.json(config);
-    } catch (err) {
-        console.error("❌ 설정 파일 읽기 실패:", err);
-        res.status(500).json({ error: "Config Error" });
-    }
+
+// ============================================================
+// [SECTION 2] 프론트엔드 UI 지원 API (신규 추가!)
+// ============================================================
+
+// 4. [NEW] 타이머 정보 제공 (5개 카테고리 상태 한 번에)
+// 프론트엔드는 이 정보를 받아 화면에 그리기만 하면 됨
+router.get('/timer', (req, res) => {
+    const status = TimeManager.getAllTimerStatus();
+    res.json(status);
 });
 
-//----------------------------------------------------------
-// 6. 마스터키 비교 (임원진 패널용)
-//----------------------------------------------------------
+// 5. [NEW] 명단 제목 텍스트 제공 (복사용)
+// 예: "1/21 수요일 정기운동"
+router.get('/title-text', (req, res) => {
+    const day = req.query.day || 'WED';
+    const text = TimeManager.getTitleText(day);
+    res.json({ text });
+});
+
+// 6. [NEW] 현재 시스템 정보 (주차 등)
+router.get('/info', (req, res) => {
+    const info = TimeManager.getSystemInfo();
+    res.json(info);
+});
+
+
+// ============================================================
+// [SECTION 3] 관리자 전용 API
+// ============================================================
+
+// 7. 관리자 인증 확인
 router.post('/admin/verify', (req, res) => {
     const { masterKey } = req.body;
-    
-    // validator에서 가져온 함수로 검증
-    if (checkMasterKey(masterKey)) {
+    if (TimeManager.checkMasterKey(masterKey)) {
         res.json({ success: true });
     } else {
-        res.status(401).json({ success: false, message: "마스터키가 올바르지 않습니다." });
+        res.status(401).json({ success: false, message: "비밀번호 불일치" });
     }
 });
 
-// ---------------------------------------------------------
-// 7. 라우터 내보내기
-// ---------------------------------------------------------
+// 8. [NEW] 학기 개강/초기화 (관리자 패널에서 호출)
+router.post('/admin/semester', (req, res) => {
+    const { masterKey, semester } = req.body;
+    
+    // 보안 검사
+    if (!TimeManager.checkMasterKey(masterKey)) {
+        return res.json({ success: false, message: "관리자 권한이 없습니다." });
+    }
+
+    if (!semester) return res.json({ success: false, message: "학기 정보가 없습니다." });
+
+    // TimeManager에게 초기화 명령
+    TimeManager.resetSemester(semester);
+    res.json({ success: true, message: `${semester} 개강 처리가 완료되었습니다.` });
+});
+
+
+// ============================================================
+// [Helper] 본인 확인 함수 (DB 조회) - 내부 사용
+// ============================================================
+function checkUserAuth(id, pwd) {
+    return new Promise((resolve, reject) => {
+        const sql = `SELECT name FROM users WHERE student_id = ? AND password = ?`;
+        db.query(sql, [id, pwd], (err, users) => {
+            if (err) return reject(err);
+            if (users.length === 0) return resolve({ valid: false, msg: "학번 또는 비밀번호 오류" });
+            resolve({ valid: true, name: users[0].name });
+        });
+    });
+}
+
 module.exports = router;
