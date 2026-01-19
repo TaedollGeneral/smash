@@ -2,24 +2,20 @@
  * [FILE: utils/TimeManager.js]
  * -----------------------------------------------------------------------------------------
  * 역할: SMASH 서비스의 '시간(Time)'과 '규칙(Rule)'을 관장하는 절대 권력자(Control Tower)입니다.
- * * [주요 기능]
- * 1. 설정 관리: config.json 파일을 읽고 쓰는 유일한 관리자 (메모리 캐싱 적용)
- * 2. 시간 규칙: 카테고리별(수/금 운동, 게스트 등) 5가지 상세 오픈/마감 규칙 적용
- * 3. 상태 판별: 현재 시간이 오픈 전인지, 신청 마감인지, 취소 마감인지 초 단위 판별
- * 4. 명단 초기화: 시간 규칙이 수정될 경우, 해당 카테고리의 신청 명단을 DB에서 삭제
- * 5. 마스터키 검증 함수 포함
+ * [변경 사항]
+ * - startDate, week 등 '저장된 상태'에 의존하지 않습니다.
+ * - 오직 '현재 시간(Now)'을 기준으로 이번 주 수요일/금요일을 자동으로 계산합니다.
  * -----------------------------------------------------------------------------------------
  */
 
 const fs = require('fs');
 const path = require('path');
-const db = require('../config/db'); // 명단 초기화(DB 삭제)를 위해 필요
+const db = require('../config/db');
 
 // [상수 설정]
 const CONFIG_PATH = path.join(__dirname, '..', 'config', 'config.json');
-const MASTER_KEY = "2026m"; // 임원진 마스터키
+const MASTER_KEY = "2026m"; 
 
-// 5개 카테고리 정의
 const CATEGORIES = [
     { id: 'WED_EXERCISE', day: 'WED', type: 'exercise', name: '수요일 운동' },
     { id: 'WED_LESSON',   day: 'WED', type: 'lesson',   name: '수요일 레슨' },
@@ -34,7 +30,7 @@ class TimeManager {
     }
 
     // =====================================================================================
-    // [SECTION 1] 설정 및 주차 관리
+    // [SECTION 1] 설정 관리 (날짜 계산에는 관여 X, 학기/주차 표시용으로만 사용)
     // =====================================================================================
 
     loadConfig() {
@@ -44,7 +40,7 @@ class TimeManager {
         } catch (err) {
             console.error("❌ [TimeManager] 설정 로드 실패. 기본값 사용.", err);
             return {
-                system: { year: 2026, semester: "겨울", week: 1, startDate: "2026-01-05" },
+                system: { year: 2026, semester: "겨울", week: 1 }, // 날짜 계산엔 안 씀
                 overrides: {}
             };
         }
@@ -59,33 +55,15 @@ class TimeManager {
         }
     }
 
-    // [관리자용] 학기 초기화 (UI에서 개강 버튼 클릭 시)
     resetSemester(newSemester) {
-        // [핵심] "오늘"이 포함된 주의 월요일을 새로운 개강일로 설정
-        const now = new Date();
-        const day = now.getDay(); // 0(일)~6(토)
-        // 월요일(1)과의 차이 계산 (일요일(0)이면 -6일, 월(1)이면 0일, 화(2)면 -1일)
-        const diff = (day === 0 ? -6 : 1 - day); 
-        
-        const newStart = new Date(now);
-        newStart.setDate(now.getDate() + diff);
-        
-        // 날짜 포맷팅 (YYYY-MM-DD)
-        const yyyy = newStart.getFullYear();
-        const mm = String(newStart.getMonth() + 1).padStart(2, '0');
-        const dd = String(newStart.getDate()).padStart(2, '0');
-        const startDateString = `${yyyy}-${mm}-${dd}`;
-
+        // 이제 날짜 계산 로직이 없으므로, 단순히 표시용 텍스트만 바꿉니다.
         this.config.system.semester = newSemester;
-        this.config.system.week = 1;
-        this.config.system.startDate = startDateString; // 새로운 기준일 저장
-        
+        this.config.system.week = 1; 
         this.resetOverrides(); 
         this.saveConfig();
-        console.log(`🔄 [TimeManager] ${newSemester} 개강! 기준일: ${startDateString}, 1주차로 리셋됨.`);
+        console.log(`🔄 [TimeManager] ${newSemester} 개강 (표시용 주차 리셋)`);
     }
 
-    // [스케줄러용] 주차 자동 증가 (매주 토요일 00시 실행)
     incrementWeek() {
         this.config.system.week += 1;
         this.resetOverrides(); 
@@ -108,8 +86,52 @@ class TimeManager {
 
 
     // =====================================================================================
-    // [SECTION 2] 시간 규칙 엔진 (핵심 로직)
+    // [SECTION 2] 시간 규칙 엔진 (핵심: 자동 날짜 계산)
     // =====================================================================================
+
+    /**
+     * [핵심] 현재 시점을 기준으로 '이번 회차'의 활동 날짜(수/금)를 계산합니다.
+     * 기준: 매주 토요일 22:00를 기점으로 회차가 넘어갑니다.
+     */
+    getActivityDate(targetDay) {
+        const now = new Date();
+        const day = now.getDay(); // 0(일)~6(토)
+        const hour = now.getHours();
+
+        // 1. 이번 주 월요일 찾기
+        // (주의: 일요일(0)인 경우, JS에서 getDay()는 이번 주 시작이 아니라 한 주 뒤로 인식될 수 있음)
+        // 안전하게: 현재 날짜에서 (요일-1)만큼 뺌. (월=0일 뺌, 화=1일 뺌...)
+        // 단, 일요일(0)은 -6을 해야 지난 주 월요일이 아니라 '이번 주(끝자락) 일요일' 기준의 월요일이 됨.
+        // 우리는 "토요일 22시"가 넘어가면 다음 주 활동을 바라봐야 함.
+
+        // 더 쉬운 로직: "다가오는 수요일/금요일"을 찾자.
+        // 단, 오늘이 수요일인데 23시라면? -> 이번 주 수요일임.
+        // 오늘이 토요일 23시라면? -> 다음 주 수요일임.
+
+        let targetDate = new Date(now);
+        
+        // 현재 요일이 토(6)이고 22시가 넘었으면 -> '다음 주'로 간주
+        const isNextCycle = (day === 6 && hour >= 22);
+        
+        // '이번 주'의 월요일을 기준으로 잡음
+        // (일요일이면 day가 0이므로 -6을 해줘야 월요일로 돌아감)
+        const dayDiffToMon = (day === 0) ? -6 : (1 - day);
+        targetDate.setDate(now.getDate() + dayDiffToMon); // 이번 주 월요일로 이동
+
+        // 만약 다음 사이클(토 22시 이후)이면 7일 더함
+        if (isNextCycle) {
+            targetDate.setDate(targetDate.getDate() + 7);
+        }
+
+        // 월요일 기준으로 수(+2), 금(+4) 계산
+        const offset = (targetDay === 'WED') ? 2 : 4;
+        targetDate.setDate(targetDate.getDate() + offset);
+        targetDate.setHours(0, 0, 0, 0); // 00시 00분으로 초기화
+
+        return targetDate;
+    }
+
+    // ----------------------------------------------------------------------
 
     getAllTimerStatus() {
         const result = {};
@@ -120,9 +142,7 @@ class TimeManager {
     }
 
     validateApplyTime(targetDay, category) {
-        if (targetDay === 'FRI' && category === 'lesson') {
-            return { valid: false, msg: "금요일은 레슨이 없습니다." };
-        }
+        if (targetDay === 'FRI' && category === 'lesson') return { valid: false, msg: "금요일은 레슨이 없습니다." };
 
         const cat = CATEGORIES.find(c => c.day === targetDay && c.type === category);
         if (!cat) return { valid: false, msg: "잘못된 카테고리입니다." };
@@ -134,11 +154,8 @@ class TimeManager {
             return { valid: false, msg: `아직 신청 시간이 아닙니다.\n(오픈: ${this.formatDate(status.target)})` };
         }
         if (status.state === 'ENDED' || status.state === 'CANCEL_CLOSING') {
-            if (now > status.rule.closeTime) {
-                return { valid: false, msg: "신청이 마감되었습니다." };
-            }
+            if (now > status.rule.closeTime) return { valid: false, msg: "신청이 마감되었습니다." };
         }
-
         return { valid: true };
     }
     
@@ -149,9 +166,7 @@ class TimeManager {
         const status = this.calcCategoryState(cat.id, targetDay, category);
         const now = new Date();
 
-        if (now > status.rule.cancelTime) {
-            return { valid: false, msg: "취소 가능 시간이 지났습니다." };
-        }
+        if (now > status.rule.cancelTime) return { valid: false, msg: "취소 가능 시간이 지났습니다." };
         return { valid: true };
     }
 
@@ -159,15 +174,9 @@ class TimeManager {
         const now = new Date();
         const rule = this.getRule(catId, day, type); 
 
-        if (now < rule.openTime) {
-            return { state: 'OPEN_WAIT', target: rule.openTime, rule };
-        }
-        if (now < rule.closeTime) {
-            return { state: 'CLOSING', target: rule.closeTime, rule };
-        }
-        if (now < rule.cancelTime) {
-            return { state: 'CANCEL_CLOSING', target: rule.cancelTime, rule };
-        }
+        if (now < rule.openTime) return { state: 'OPEN_WAIT', target: rule.openTime, rule };
+        if (now < rule.closeTime) return { state: 'CLOSING', target: rule.closeTime, rule };
+        if (now < rule.cancelTime) return { state: 'CANCEL_CLOSING', target: rule.cancelTime, rule };
         return { state: 'ENDED', target: null, rule };
     }
 
@@ -175,7 +184,6 @@ class TimeManager {
         const ovOpen = this.config.overrides[`${catId}_OPEN`];
         const ovClose = this.config.overrides[`${catId}_CLOSE`];
         const ovCancel = this.config.overrides[`${catId}_CANCEL`];
-
         const def = this.getDefaultRule(day, type);
 
         return {
@@ -186,18 +194,13 @@ class TimeManager {
     }
 
     /**
-     * [수정됨] 저장된 기준일(startDate)을 사용하여 마감 시간 계산
+     * [수정됨] startDate 없이, getActivityDate()로 자동 계산
      */
     getDefaultRule(targetDay, type) {
-        const currentWeek = this.config.system.week;
-        // 설정 파일에 저장된 시작일 불러오기 (없으면 하드코딩 값)
-        const start = new Date(this.config.system.startDate || START_DATE_STRING);
-        
-        const dayOffset = (targetDay === 'WED') ? 2 : 4;
-        
-        const activityDate = new Date(start);
-        activityDate.setDate(start.getDate() + (currentWeek - 1) * 7 + dayOffset);
+        // 1. 이번 회차의 활동 날짜(수/금)를 자동으로 구함
+        const activityDate = this.getActivityDate(targetDay);
 
+        // 2. 규칙 적용 (역산)
         let openTime = new Date(activityDate);
         let closeTime = new Date(activityDate);
         let cancelTime = new Date(activityDate);
@@ -207,13 +210,18 @@ class TimeManager {
         openTime.setDate(activityDate.getDate() + openOffset);
         openTime.setHours(22, 0, 0, 0);
 
+        // [개별 마감 규칙]
         if (targetDay === 'WED') {
             if (type === 'guest') {
+                // 수요일 게스트: 수 18:00 마감
                 closeTime.setHours(18, 0, 0, 0);
-                cancelTime.setDate(activityDate.getDate() + 1);
+                cancelTime.setDate(activityDate.getDate() + 1); // 다음날 00시
                 cancelTime.setHours(0, 0, 0, 0);
             } else {
-                closeTime.setDate(activityDate.getDate() - 3);
+                // 수요일 운동: 일요일 22:00 마감
+                // ★ 주의: 오늘이 화요일이면, 일요일은 이미 지났으므로 '마감됨'이 뜨는게 정상입니다.
+                // 테스트를 위해 열고 싶다면 이 부분을 수정하거나 오버라이드 하세요.
+                closeTime.setDate(activityDate.getDate() - 3); 
                 closeTime.setHours(22, 0, 0, 0);
                 cancelTime.setHours(0, 0, 0, 0); 
             }
@@ -224,6 +232,7 @@ class TimeManager {
                 cancelTime.setDate(activityDate.getDate() + 1);
                 cancelTime.setHours(0, 0, 0, 0);
             } else {
+                // 금요일 운동: 일요일 22:00 마감
                 closeTime.setDate(activityDate.getDate() - 5);
                 closeTime.setHours(22, 0, 0, 0);
                 cancelTime.setHours(0, 0, 0, 0);
@@ -246,9 +255,7 @@ class TimeManager {
         const parts = catId.split('_'); 
         const day = parts[0];
         const category = parts[1].toLowerCase();
-        
         const sql = `DELETE FROM applications WHERE day = ? AND category = ?`;
-        
         try {
             const [result] = await db.promise().query(sql, [day, category]);
             return true;
@@ -258,18 +265,12 @@ class TimeManager {
     }
 
     getTitleText(targetDay) {
-        const currentWeek = this.config.system.week;
-        const start = new Date(this.config.system.startDate || START_DATE_STRING);
-        const dayOffset = (targetDay === 'WED') ? 2 : 4;
-        
-        const targetDate = new Date(start);
-        targetDate.setDate(start.getDate() + (currentWeek - 1) * 7 + dayOffset);
-
+        // 제목용 날짜도 자동으로 계산
+        const targetDate = this.getActivityDate(targetDay);
         const month = targetDate.getMonth() + 1;
         const date = targetDate.getDate();
         const dayName = (targetDay === 'WED') ? '수요일' : '금요일';
         const type = (targetDay === 'WED') ? '정기운동 18-21시' : '추가운동 15-17시';
-
         return `${month}/${date} ${dayName} ${type}`;
     }
 

@@ -202,24 +202,42 @@ h3 { margin: 0 0 10px 0; font-size: 16px; display: inline-block; }
 }
 
 /* ---------------------------------------------------------
-   7. [관리자 및 신규 UI 스타일] (2026.01.20 통합 수정본)
+   7. [관리자 및 신규 UI 스타일] (2026.01.20 수정본)
    --------------------------------------------------------- */
 
-/* [타이머] 명단 제목 옆으로 이동 (작은 사이즈) */
-.timer-text {
-    font-size: 0.9rem;       /* 글자 크기 축소 (기존 18px -> 약 14px) */
-    font-weight: normal;
-    margin-left: 10px;
-    padding: 2px 6px;
-    border-radius: 4px;
-    background-color: #f8f9fa; /* 연한 회색 배경 */
-    font-family: monospace;    /* 숫자 간격 일정하게 */
+/* [타이머 컨테이너] 제목 옆에 붙는 박스 */
+.timer-container {
+    display: flex;
+    flex-direction: column;     /* 위아래 2줄 배치 */
+    justify-content: center;
+    align-items: flex-start;    /* 왼쪽 정렬 */
+    margin-left: 12px;          /* 제목과의 간격 */
+    padding-left: 12px;         /* 구분선과의 간격 */
+    border-left: 1px solid #ccc;/* [핵심] 회색 구분선 (|) */
+    line-height: 1.1;           /* 줄 간격 좁게 */
 }
 
-/* 상태별 텍스트 색상 */
-.text-gray { color: #6c757d; }
-.text-green { color: #28a745; font-weight: bold; }
-.text-orange { color: #fd7e14; font-weight: bold; }
+/* 1) 윗줄: 라벨 (예: 투표 마감까지) */
+.timer-label {
+    font-size: 11px;
+    color: #888;
+    font-weight: normal;
+    margin-bottom: 2px;
+}
+
+/* 2) 아랫줄: 시간 (예: 00:00:00) */
+.timer-number {
+    font-size: 19px;        /* 큼직한 폰트 복구! */
+    font-family: monospace; /* 숫자 간격 일정하게 */
+    font-weight: 700;       /* 두껍게 */
+    letter-spacing: -0.5px;
+}
+
+/* 상태별 색상 (숫자에만 적용됨) */
+.text-gray { color: #aaa; }
+.text-green { color: #28a745; }
+.text-orange { color: #fd7e14; }
+
 
 /* [관리자 버튼] ⚙️ 아이콘 */
 .admin-btn {
@@ -228,88 +246,43 @@ h3 { margin: 0 0 10px 0; font-size: 16px; display: inline-block; }
 }
 .admin-btn:hover { background-color: rgba(255, 255, 255, 0.1); }
 
-
-/* =========================================================
-   [모달 공통] 관리자 인증 & 대시보드 레이어
-   ========================================================= */
-
-/* 배경 (검은 반투명 레이어) */
+/* [모달 공통] 관리자 인증 & 대시보드 레이어 */
 .admin-layer {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.6); /* 어두운 배경 */
-    z-index: 9999;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.6); z-index: 9999;
+    display: flex; justify-content: center; align-items: center;
 }
 
-/* 1. 인증 박스 (작은 팝업) */
 .admin-auth-box {
-    background: white;
-    padding: 25px;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 320px;
-    text-align: center;
+    background: white; padding: 25px; border-radius: 12px;
+    width: 90%; max-width: 320px; text-align: center;
     box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }
 
-.admin-auth-box h4 {
-    margin-top: 0; margin-bottom: 20px;
-    font-size: 1.2rem; color: #333;
-}
-
+.admin-auth-box h4 { margin: 0 0 20px 0; font-size: 1.2rem; color: #333; }
 .admin-auth-box input {
     width: 100%; padding: 12px; margin-bottom: 20px;
-    border: 1px solid #ddd; border-radius: 8px;
-    font-size: 16px; text-align: center;
-    box-sizing: border-box;
+    border: 1px solid #ddd; border-radius: 8px; font-size: 16px; text-align: center; box-sizing: border-box;
 }
 
 .auth-btns { display: flex; gap: 10px; }
-
-.auth-btns button {
-    flex: 1; padding: 12px; border: none; border-radius: 8px;
-    font-size: 16px; cursor: pointer;
-}
+.auth-btns button { flex: 1; padding: 12px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
 
 #auth-cancel-btn { background: #eee; color: #333; }
 #auth-confirm-btn { background: #007bff; color: white; font-weight: bold; }
 
-
-/* 2. 대시보드 패널 (중앙 팝업 스타일) */
-/* 중요: 기존 .admin-panel 클래스와 충돌하지 않도록 ID 선택자로 강력하게 지정 */
+/* 대시보드 패널 (중앙 팝업) */
 #admin-dashboard-panel {
-    position: fixed;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%); /* 정확한 정중앙 배치 */
-    width: 90%;
-    max-width: 400px;
-    background: white;
-    border-radius: 15px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-    padding: 20px;
-    z-index: 10000;
-    display: flex;
-    flex-direction: column;
-    
-    /* 기존 .admin-panel 스타일(bottom:0) 무력화 */
-    bottom: auto !important; 
-    animation: none; /* 슬라이드 업 애니메이션 제거 */
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 90%; max-width: 400px; background: white;
+    border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    padding: 20px; z-index: 10000; display: flex; flex-direction: column;
+    bottom: auto !important; animation: none;
 }
-
-.admin-header {
-    display: flex; justify-content: space-between; align-items: center;
-}
-
+.admin-header { display: flex; justify-content: space-between; align-items: center; }
 .admin-menu-grid { padding: 10px 0; }
-
 .menu-item { margin-bottom: 15px; }
 
-
-/* [PC 전용 설정] 아코디언 펼침 고정 */
 @media (min-width: 769px) {
     .arrow { display: none !important; }
     .accordion-header { cursor: default !important; pointer-events: none; }

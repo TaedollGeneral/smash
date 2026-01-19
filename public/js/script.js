@@ -1,11 +1,8 @@
 /**
  * [FILE: public/js/script.js]
- * 역할: 일반 사용자용 프론트엔드 로직 (타이머, 명단 조회, 신청/취소, 제목 업데이트)
+ * 역할: 일반 사용자용 프론트엔드 로직
  */
 
-// ============================================================
-// [1] 전역 변수 및 상태 관리
-// ============================================================
 let currentDay = 'WED'; 
 let timerCache = {};    
 let timerInterval = null; 
@@ -21,58 +18,29 @@ const els = {
     pwdInput: document.getElementById('user-pwd'),
     catSelect: document.getElementById('category-select'),
     guestNameInput: document.getElementById('guest-name-input'),
-    // [추가] 제목 요소 (index.html의 <h4 class="title">)
     titleText: document.querySelector('.title') 
 };
 
-
-// ============================================================
-// [2] 초기화 및 이벤트 리스너
-// ============================================================
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. 초기 데이터 로드
     fetchServerTimer(); 
     fetchStatus();      
-    fetchSystemInfo(); // [추가] 제목(학기/주차) 가져오기!
-    
-    // 2. 주기적 동기화
+    fetchSystemInfo();
     setInterval(fetchServerTimer, 10000); 
-
-    // 3. 화면 카운트다운 시작
     startLocalCountdown();
-
-    // 4. 입력창 이벤트
     els.catSelect.addEventListener('change', toggleGuestInput);
-    
-    // PWA 서비스 워커 등록
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/service-worker.js')
-            .then(() => console.log('SW Registered'))
-            .catch(err => console.log('SW Fail:', err));
+        navigator.serviceWorker.register('/service-worker.js').catch(console.log);
     }
 });
 
-
-// ============================================================
-// [추가] 시스템 정보(제목) 가져오기
-// ============================================================
 async function fetchSystemInfo() {
     try {
         const res = await fetch('/api/info');
         const data = await res.json();
-        // 예: "겨울학기 1주차"
-        if(els.titleText) {
-            els.titleText.innerText = `${data.semester}학기 ${data.week}주차`;
-        }
-    } catch (err) {
-        console.error("정보 로드 실패:", err);
-    }
+        if(els.titleText) els.titleText.innerText = `${data.semester}학기 ${data.week}주차`;
+    } catch (err) { console.error(err); }
 }
 
-
-// ============================================================
-// [3] 타이머 시스템
-// ============================================================
 async function fetchServerTimer() {
     try {
         const res = await fetch('/api/timer');
@@ -80,9 +48,7 @@ async function fetchServerTimer() {
             timerCache = await res.json();
             updateTimerUI(); 
         }
-    } catch (err) {
-        console.error("타이머 동기화 실패:", err);
-    }
+    } catch (err) { console.error(err); }
 }
 
 function startLocalCountdown() {
@@ -103,48 +69,58 @@ function updateTimerUI() {
     renderSingleTimer(els.timerGuest, timerCache[keys.guest]);
 
     if (currentDay === 'FRI') {
-        els.timerLesson.textContent = "";
+        els.timerLesson.innerHTML = ""; // innerHTML로 초기화
     } else {
         renderSingleTimer(els.timerLesson, timerCache[keys.lesson]);
     }
 }
 
+/**
+ * [핵심 수정] 2단 구조(라벨 + 시간)로 렌더링
+ */
 function renderSingleTimer(element, data) {
     if (!element || !data) return;
 
     const now = new Date();
     const target = new Date(data.target);
     let diff = target - now;
-
     if (diff < 0) diff = 0;
 
     const timeStr = formatTime(diff);
     
-    let label = "";
+    let labelText = "";
     let colorClass = "text-gray"; 
 
+    // 상태별 라벨 텍스트 결정
     switch (data.state) {
         case 'OPEN_WAIT':
-            label = `오픈 ${timeStr}`;
+            labelText = "오픈까지";
             colorClass = "text-gray";
             break;
         case 'CLOSING':
-            label = `마감 ${timeStr}`;
-            colorClass = "text-green"; 
+            labelText = "투표 마감까지"; // 사진 속 그 멘트!
+            colorClass = "text-green"; // 사진 속 그 초록색!
             break;
         case 'CANCEL_CLOSING':
-            label = `취소마감 ${timeStr}`;
+            labelText = "취소 마감까지";
             colorClass = "text-orange"; 
             break;
         case 'ENDED':
-            label = "마감됨";
+            labelText = "상태";
             colorClass = "text-gray";
             break;
     }
 
-    element.textContent = label;
-    element.className = "timer-text"; 
-    element.classList.add(colorClass);
+    // 마감된 경우 시간 대신 '마감됨' 표시
+    const displayTime = (data.state === 'ENDED') ? "마감됨" : timeStr;
+
+    // [중요] HTML 구조를 통째로 교체 (구분선은 CSS border-left로 처리됨)
+    // 기존의 span class="timer-text"를 덮어쓰고 새로운 구조를 만듭니다.
+    element.className = "timer-container"; // CSS에서 만든 그 클래스 적용
+    element.innerHTML = `
+        <div class="timer-label">${labelText}</div>
+        <div class="timer-number ${colorClass}">${displayTime}</div>
+    `;
 }
 
 function formatTime(ms) {
@@ -153,13 +129,10 @@ function formatTime(ms) {
     const h = Math.floor(totalSec / 3600);
     const m = Math.floor((totalSec % 3600) / 60);
     const s = totalSec % 60;
+    // 시:분:초 (00:00:00)
     return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 }
 
-
-// ============================================================
-// [4] 명단 리스트 및 UI 제어
-// ============================================================
 function selectDay(day, btnElement) {
     currentDay = day;
     document.querySelectorAll('.day-btn').forEach(b => b.classList.remove('active'));
@@ -184,9 +157,7 @@ async function fetchStatus() {
         const res = await fetch(`/api/status?day=${currentDay}`);
         const data = await res.json();
         renderLists(data);
-    } catch (err) {
-        console.error("명단 로드 실패:", err);
-    }
+    } catch (err) { console.error(err); }
 }
 
 function renderLists(data) {
@@ -229,10 +200,6 @@ function formatDateShort(isoStr) {
     return `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${d.getMinutes().toString().padStart(2,'0')}`;
 }
 
-
-// ============================================================
-// [5] 폼 제출
-// ============================================================
 async function submitForm() {
     const id = els.idInput.value.trim();
     const pwd = els.pwdInput.value.trim();
