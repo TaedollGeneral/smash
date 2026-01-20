@@ -285,3 +285,8 @@ select { padding: 6px; border-radius: 4px; }
     .left-panel, .sub-panel { height: 100%; display: flex; flex-direction: column; }
     .accordion-content { flex: 1; overflow-y: auto; }
 }
+
+/* [수정] 시간 강제 변경 모달을 관리자 도구(z-index: 10000)보다 위에 띄움 */
+#admin-time-modal {
+    z-index: 20000 !important; 
+}

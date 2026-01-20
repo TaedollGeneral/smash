@@ -52,11 +52,28 @@ class TimeManager {
         };
     }
 
-    updateOverride(key, isoTimeStr) {
-        const dateObj = new Date(isoTimeStr);
-        this.config.overrides[key] = dateObj.toISOString();
+/**
+     * [수정됨] "시간(HH:MM)"만 입력받아, 자동으로 '이번 주 해당 요일'의 날짜와 결합합니다.
+     * 절대 날짜를 입력받지 않으므로, 주간 반복 시스템의 철학을 완벽하게 따릅니다.
+     */
+    updateOverride(key, timeStr) {
+        if (!timeStr) return;
+
+        // 1. 키에서 요일 추출 (예: WED_EXERCISE_OPEN -> WED)
+        const targetDay = key.startsWith('FRI') ? 'FRI' : 'WED';
+
+        // 2. [핵심] '이번 주'의 해당 요일 날짜를 서버가 직접 계산 (클라이언트 날짜 무시)
+        const targetDate = this.getActivityDate(targetDay);
+
+        // 3. 입력받은 시간(HH:MM)을 기준 날짜에 적용
+        const [hour, minute] = timeStr.split(':').map(Number);
+        targetDate.setHours(hour, minute, 0, 0);
+
+        // 4. 완성된 시점을 저장
+        this.config.overrides[key] = targetDate.toISOString();
+        
         this.saveConfig();
-        console.log(`⚡ [TimeManager] Override 적용: ${key}`);
+        console.log(`⚡ [TimeManager] Override 적용: ${key} -> ${timeStr} (기준일: ${this.formatDate(targetDate)})`);
     }
 
     getSystemInfo() { return this.config.system; }

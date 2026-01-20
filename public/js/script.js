@@ -259,3 +259,74 @@ async function submitForm() {
         alert("서버 통신 오류");
     }
 }
+
+/* --------------------------------------------------------------------------
+   [누락된 함수 복구] 명단 렌더링
+   -------------------------------------------------------------------------- */
+function renderLists(data) {
+    // 1. 초기화
+    els.listExercise.innerHTML = '';
+    els.listGuest.innerHTML = '';
+    els.listLesson.innerHTML = '';
+
+    if (!data || data.length === 0) {
+        els.listExercise.innerHTML = '<tr><td colspan="3">신청자가 없습니다.</td></tr>';
+        return;
+    }
+
+    // 2. 카테고리별 분류
+    const exercise = data.filter(item => item.category === 'exercise');
+    const guest = data.filter(item => item.category === 'guest');
+    const lesson = data.filter(item => item.category === 'lesson');
+
+    // 3. 운동 명단 그리기
+    if (exercise.length > 0) {
+        exercise.forEach((item, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${item.user_name || item.student_id}</td>
+                <td>${formatDateShort(item.created_at)}</td>
+            `;
+            els.listExercise.appendChild(row);
+        });
+    } else {
+        els.listExercise.innerHTML = '<tr><td colspan="3">-</td></tr>';
+    }
+
+    // 4. 게스트 명단 그리기
+    if (guest.length > 0) {
+        guest.forEach((item, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${item.guest_name}</td>
+                <td>${item.user_name || '관리자'}</td>
+            `;
+            els.listGuest.appendChild(row);
+        });
+    } else {
+        els.listGuest.innerHTML = '<tr><td colspan="3">-</td></tr>';
+    }
+
+    // 5. 레슨 명단 그리기
+    if (lesson.length > 0) {
+        lesson.forEach((item, index) => {
+            // 레슨 시간 계산 (18:00부터 15분 간격)
+            const startMin = 18 * 60 + (index * 15);
+            const h = Math.floor(startMin / 60);
+            const m = startMin % 60;
+            const timeStr = `${h}:${m.toString().padStart(2, '0')}`;
+            
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${item.user_name || item.student_id}</td>
+                <td>${timeStr} ~</td>
+            `;
+            els.listLesson.appendChild(row);
+        });
+    } else {
+        els.listLesson.innerHTML = '<tr><td colspan="3">-</td></tr>';
+    }
+}
