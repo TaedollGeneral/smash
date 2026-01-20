@@ -1,24 +1,17 @@
 /**
  * [FILE: style.css]
- * 역할: 웹 서비스의 시각적 디자인, 레이아웃, 애니메이션 및 모바일 반응형 설정
+ * 역할: 2026 SMASH 서비스 통합 스타일시트 (Clean Version)
+ * 최종 수정일: 2026.01.20
  */
 
 /* ---------------------------------------------------------
-   0. 애니메이션 정의
+   1. [기본 설정 & 애니메이션]
    --------------------------------------------------------- */
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.6; }
-}
-
 @keyframes slideUp {
     from { transform: translateY(100%); }
     to { transform: translateY(0); }
 }
 
-/* ---------------------------------------------------------
-   1. [공통 설정]
-   --------------------------------------------------------- */
 body {
     font-family: 'Pretendard', 'Malgun Gothic', -apple-system, sans-serif;
     background-color: #f0f2f5;
@@ -33,7 +26,7 @@ body {
 }
 
 /* ---------------------------------------------------------
-   2. [스마트 헤더]
+   2. [상단 헤더 영역]
    --------------------------------------------------------- */
 .header-container {
     display: flex;
@@ -47,38 +40,44 @@ body {
     flex-shrink: 0;
 }
 
-.left-section { display: flex; align-items: center; gap: 15px; }
+.left-section { 
+    display: flex; 
+    align-items: center; 
+    gap: 15px; 
+}
 
-.title-group { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; }
+.title-group { 
+    display: flex; 
+    flex-direction: column; 
+    align-items: flex-start; 
+    justify-content: center; 
+    gap: 2px; 
+}
 
 .title1 { font-size: 20px; font-weight: 800; color: #111827; margin: 0; line-height: 1.1; }
-
 .title { font-size: 13px; font-weight: 400; color: #6b7280; margin: 0; }
 
-.divider { width: 1px; height: 32px; background-color: #e5e7eb; }
+/* [디자인] 상단 세로 구분선 */
+.divider {
+    width: 1px;
+    height: 20px;
+    background-color: #e5e7eb;
+    margin: 0 15px;
+    display: block;
+}
 
-.timer-box { display: flex; flex-direction: column; align-items: flex-start; }
-
-.timer-label { font-size: 11px; font-weight: 600; color: #6b7280; margin-bottom: 2px; }
-
-.timer-text { font-family: monospace; font-size: 18px; font-weight: 700; transition: color 0.3s; }
-
-/* 타이머 상태별 색상 */
-.text-green { color: #22c55e; }
-.text-red { color: #ef4444; animation: pulse 2s infinite; }
-.text-gray { color: #9ca3af; }
-
+/* 요일 선택 토글 */
 .day-toggle { display: flex; background-color: #f3f4f6; padding: 4px; border-radius: 8px; }
 
 .day-btn {
     border: none; background: none; padding: 6px 12px; font-size: 13px; font-weight: 700;
     border-radius: 6px; cursor: pointer; color: #9ca3af; transition: all 0.2s;
 }
-
 .day-btn.active { background-color: white; color: #2563eb; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
 
+
 /* ---------------------------------------------------------
-   3. [메인 대시보드]
+   3. [대시보드 & 아코디언 패널]
    --------------------------------------------------------- */
 .dashboard-area {
     display: flex; flex: 1; gap: 10px; min-height: 0; overflow: hidden;
@@ -88,15 +87,81 @@ body {
     background-color: white; border-radius: 10px; padding: 10px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1); overflow-y: auto; border: 1px solid #ddd;
 }
-
 .left-panel { flex: 1.5; }
-
+.sub-panel { flex: 1; }
 .right-panel-wrapper { flex: 1; display: flex; flex-direction: column; gap: 10px; }
 
-.sub-panel { flex: 1; }
+
+/* [아코디언 헤더 구조] */
+.accordion-header {
+    height: 50px;
+    display: flex;
+    justify-content: space-between; /* 좌우 끝 정렬 */
+    align-items: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    padding: 0 5px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* 제목 텍스트 (왼쪽) */
+.accordion-header h3 {
+    margin: 0;
+    white-space: nowrap;
+    position: relative;
+    top: -3px; /* 제목 전체를 살짝 위로 (시각적 보정) */
+}
+
+/* 텍스트 미세 조정 (이모티콘 높이 맞춤) */
+.title-adjust {
+    position: relative;
+    top: 2px; 
+    margin-left: 2px;
+}
+
+/* 헤더 오른쪽 그룹 (타이머 + 화살표) */
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: auto;
+}
+
+/* 타이머 박스 디자인 */
+.timer-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-end;
+    border-left: 1px solid #ddd; /* 타이머 구분선 */
+    padding-left: 12px;
+    height: 30px;
+}
+
+.timer-label { font-size: 10px; color: #999; margin-bottom: 2px; line-height: 1; }
+.timer-number { font-size: 15px; font-family: monospace; font-weight: 700; letter-spacing: -0.3px; line-height: 1; }
+
+/* 타이머 색상 */
+.text-gray { color: #aaa; }
+.text-green { color: #28a745; }
+.text-blue { color: #4c6ef5; } /* 취소마감용 고급 블루 */
+
 
 /* ---------------------------------------------------------
-   4. [하단 컨트롤 패널]
+   4. [테이블 & 데이터]
+   --------------------------------------------------------- */
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th {
+    background-color: #f8f9fa; position: sticky; top: 0; padding: 8px;
+    border-bottom: 2px solid #ddd; font-size: 13px; z-index: 10;
+}
+td { padding: 8px; border-bottom: 1px solid #eee; text-align: center; }
+th:first-child, td:first-child { width: 40px; background-color: #f1f1f1; font-weight: bold; }
+
+
+/* ---------------------------------------------------------
+   5. [하단 컨트롤 패널]
    --------------------------------------------------------- */
 .control-panel {
     background-color: #333; color: white; padding: 10px 15px; border-radius: 10px;
@@ -106,13 +171,10 @@ body {
 }
 
 .input-group { display: flex; align-items: center; gap: 8px; }
-
 input[type="text"], input[type="password"] {
     padding: 6px; border: 1px solid #ccc; border-radius: 4px; width: 80px; font-size: 14px;
 }
-
 select { padding: 6px; border-radius: 4px; }
-
 .radio-label { font-size: 14px; margin-right: 5px; cursor: pointer; white-space: nowrap; }
 
 .submit-btn {
@@ -120,228 +182,103 @@ select { padding: 6px; border-radius: 4px; }
     border-radius: 5px; font-weight: bold; cursor: pointer; white-space: nowrap;
 }
 
-/* ---------------------------------------------------------
-   5. [데이터 테이블]
-   --------------------------------------------------------- */
-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-
-th {
-    background-color: #f8f9fa; position: sticky; top: 0; padding: 8px;
-    border-bottom: 2px solid #ddd; font-size: 13px; z-index: 10;
-}
-
-td { padding: 8px; border-bottom: 1px solid #eee; text-align: center; }
-
-th:first-child, td:first-child { width: 40px; background-color: #f1f1f1; font-weight: bold; }
-
-h3 { margin: 0 0 10px 0; font-size: 16px; display: inline-block; }
 
 /* ---------------------------------------------------------
-   6. [모바일 반응형 & 아코디언]
+   6. [관리자 UI (모달 & 대시보드)]
    --------------------------------------------------------- */
-@media (max-width: 768px) {
-    body { padding: 5px; gap: 5px; height: 100vh; overflow: hidden; }
-
-    .header-container { padding: 10px; }
-    .title1 { font-size: 18px; }
-    .timer-text { font-size: 16px; }
-    .divider { margin: 0 8px; }
-
-    .dashboard-area { flex-direction: column; gap: 5px; }
-    
-    .accordion-item { 
-        display: flex; flex-direction: column; background-color: white;
-        border-radius: 8px; overflow: hidden; padding: 0 10px; border: 1px solid #ddd;
-        transition: flex 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .accordion-item:not(.collapsed) { flex: 1; }
-    .accordion-item.collapsed { flex: 0 0 45px; }
-
-    .left-panel, .right-panel-wrapper, .sub-panel { height: auto !important; margin: 0; padding: 10px 15px; box-shadow: none; }
-    .right-panel-wrapper { display: contents; }
-
-    .control-panel { flex-direction: column; gap: 5px; padding: 8px; align-items: stretch; }
-
-    .input-group:nth-child(1) { display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 5px; }
-    
-    .accordion-header {
-        height: 45px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; flex-shrink: 0;
-    }
-
-    .arrow {
-    display: inline-block;
-    width: 8px;             /* 너비 */
-    height: 8px;            /* 높이 */
-    border-right: 2px solid #aaa; /* 오른쪽 테두리 */
-    border-bottom: 2px solid #aaa; /* 아래쪽 테두리 */
-    margin-left: 10px;      /* 텍스트와의 간격 */
-    
-    /* 기본 상태(펼쳐짐): 위쪽(^)을 향하도록 회전 */
-    transform: rotate(225deg); 
-    transition: transform 0.3s ease; /* 부드러운 회전 애니메이션 */
-}
-
-    .accordion-item.collapsed .accordion-content { display: none !important; }
-
-    .accordion-content { flex: 1; overflow-y: auto; padding-bottom: 10px; }
-
-    .accordion-item.collapsed .arrow 
-    {
-        transform: rotate(45deg); 
-    }
-
-    .hidden { display: none !important; }
-
-    .input-group.mobile-row-2 { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-
-    /* [핵심] 관리자버튼 + 확인버튼을 오른쪽 끝으로 밀기 */
-    .submit-group { margin-left: auto; display: flex; align-items: center; gap: 5px; flex: 1; }
-
-    .admin-btn, .submit-btn { height: 40px; display: flex; align-items: center; justify-content: center; }
-}
-
-/* ---------------------------------------------------------
-   7. [관리자 및 신규 UI 스타일] (2026.01.20 최종 수정본)
-   --------------------------------------------------------- */
-
-/* [헤더] 상단 구분선 (SMASH 옆) */
-.divider {
-    width: 1px;
-    height: 20px;       /* 높이 적당히 */
-    background-color: #e5e7eb;
-    margin: 0 15px;     /* 좌우 여백 */
-    display: block;     /* 숨겨지지 않게 강제 */
-}
-
-/* [아코디언 헤더] 좌우 정렬 보장 */
-.accordion-header {
-    height: 50px;
-    display: flex;
-    justify-content: space-between; /* 양 끝 배치를 위해 필수 */
-    align-items: center;
-    cursor: pointer;
-    flex-shrink: 0;
-    padding: 0 5px;
-    width: 100%;       /* 너비 꽉 채우기 */
-    box-sizing: border-box;
-}
-
-/* 헤더 내 제목 (왼쪽) */
-.accordion-header h3 {
-    margin: 0;
-    white-space: nowrap; /* 줄바꿈 방지 */
-}
-
-/* 헤더 내 오른쪽 그룹 (타이머 + 화살표) */
-.header-right {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-left: auto; /* 왼쪽 요소 밀어내고 오른쪽 붙기 */
-}
-
-/* [타이머 컨테이너] 디자인 개선 (구분선 길이 고정) */
-.timer-container {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: flex-end; /* 텍스트 오른쪽 정렬 */
-    
-    /* 구분선 디자인 */
-    border-left: 1px solid #ddd;
-    padding-left: 12px;
-    height: 30px; /* 높이 고정 (너무 길어지지 않게) */
-}
-
-/* 1) 윗줄: 라벨 */
-.timer-label {
-    font-size: 10px;
-    color: #999;
-    font-weight: normal;
-    margin-bottom: 2px;
-    line-height: 1;
-}
-
-/* 2) 아랫줄: 시간 (15px로 축소) */
-.timer-number {
-    font-size: 15px;
-    font-family: monospace;
-    font-weight: 700;
-    letter-spacing: -0.3px;
-    line-height: 1;
-}
-
-/* 상태별 색상 (애니메이션 제거) */
-.text-gray { color: #aaa; }
-.text-green { color: #28a745; }
-.text-orange { color: #fd7e14; animation: none !important; } /* 깜빡임 원천 차단 */
-
-
-/* [관리자 버튼 & 모달] */
 .admin-btn {
     background: none; border: none; border-radius: 5px; padding: 8px 12px;
     cursor: pointer; font-size: 18px; color: white; outline: none; transition: all 0.3s;
 }
 .admin-btn:hover { background-color: rgba(255, 255, 255, 0.1); }
 
+/* 모달 공통 배경 */
 .admin-layer {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0, 0, 0, 0.6); z-index: 9999;
     display: flex; justify-content: center; align-items: center;
 }
 
+/* 인증 박스 */
 .admin-auth-box {
     background: white; padding: 25px; border-radius: 12px;
     width: 90%; max-width: 320px; text-align: center;
     box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }
-
 .admin-auth-box h4 { margin: 0 0 20px 0; font-size: 1.2rem; color: #333; }
 .admin-auth-box input {
     width: 100%; padding: 12px; margin-bottom: 20px;
     border: 1px solid #ddd; border-radius: 8px; font-size: 16px; text-align: center; box-sizing: border-box;
 }
 
-.auth-btns { display: flex; gap: 10px; }
-.auth-btns button { flex: 1; padding: 12px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
-
-#auth-cancel-btn { background: #eee; color: #333; }
-#auth-confirm-btn { background: #007bff; color: white; font-weight: bold; }
-
+/* 대시보드 패널 */
 #admin-dashboard-panel {
     position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
     width: 90%; max-width: 400px; background: white;
     border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.3);
     padding: 20px; z-index: 10000; display: flex; flex-direction: column;
-    bottom: auto !important; animation: none;
 }
 .admin-header { display: flex; justify-content: space-between; align-items: center; }
 .admin-menu-grid { padding: 10px 0; }
 .menu-item { margin-bottom: 15px; }
 
-/* PC 전용 설정: 패널 높이 문제 해결 */
-@media (min-width: 769px) {
-    .arrow { display: none !important; }
-    .accordion-header { cursor: default !important; pointer-events: none; }
+/* 모달 버튼 그룹 */
+.auth-btns { display: flex; gap: 10px; }
+.auth-btns button { flex: 1; padding: 12px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
+#auth-cancel-btn { background: #eee; color: #333; }
+#auth-confirm-btn { background: #007bff; color: white; font-weight: bold; }
+
+
+/* ---------------------------------------------------------
+   7. [반응형 (모바일 & PC 분기)]
+   --------------------------------------------------------- */
+
+/* [모바일] ~768px */
+@media (max-width: 768px) {
+    body { padding: 5px; gap: 5px; height: 100vh; overflow: hidden; }
+    .header-container { padding: 10px; }
+    .title1 { font-size: 18px; }
     
-    /* PC에서 패널이 너무 길어지거나 깨지는 것 방지 */
-    .dashboard-area {
-        overflow: hidden; /* 전체 영역 스크롤 방지 */
+    .dashboard-area { flex-direction: column; gap: 5px; }
+
+    /* 모바일용 아코디언 동작 */
+    .accordion-item { 
+        display: flex; flex-direction: column; background-color: white;
+        border-radius: 8px; overflow: hidden; padding: 0 10px; border: 1px solid #ddd;
+        transition: flex 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .left-panel, .sub-panel {
-        height: 100%; /* 부모 높이만큼만 차지 */
-        display: flex;
-        flex-direction: column;
+    .accordion-item:not(.collapsed) { flex: 1; }
+    .accordion-item.collapsed { flex: 0 0 45px; }
+    .accordion-item.collapsed .accordion-content { display: none !important; }
+    
+    .left-panel, .right-panel-wrapper, .sub-panel { height: auto !important; margin: 0; padding: 10px 15px; box-shadow: none; }
+    .right-panel-wrapper { display: contents; }
+
+    /* 화살표 아이콘 */
+    .arrow {
+        display: inline-block; width: 8px; height: 8px;
+        border-right: 2px solid #aaa; border-bottom: 2px solid #aaa; margin-left: 10px;
+        transform: rotate(225deg); transition: transform 0.3s ease;
     }
-    .accordion-content {
-        flex: 1;
-        overflow-y: auto; /* 내용물만 스크롤 */
-    }
+    .accordion-item.collapsed .arrow { transform: rotate(45deg); }
+
+    /* 컨트롤 패널 조정 */
+    .control-panel { flex-direction: column; gap: 5px; padding: 8px; align-items: stretch; }
+    .input-group:nth-child(1) { display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 5px; }
+    .input-group.mobile-row-2 { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .submit-group { margin-left: auto; display: flex; align-items: center; gap: 5px; flex: 1; }
+    .admin-btn, .submit-btn { height: 40px; display: flex; align-items: center; justify-content: center; }
 }
 
-.title-adjust {
-    position: relative;
-    top: 2px;        /* 숫자가 클수록 더 많이 내려갑니다 (1px ~ 3px 추천) */
-    margin-left: 2px; /* 이모티콘이랑 너무 딱 붙지 않게 살짝 띄움 */
+
+/* [PC] 769px~ */
+@media (min-width: 769px) {
+    /* PC에서는 아코디언 기능 해제 (항상 펼침) */
+    .arrow { display: none !important; }
+    .accordion-header { cursor: default !important; pointer-events: none; }
+
+    /* 레이아웃 고정 */
+    .dashboard-area { overflow: hidden; }
+    .left-panel, .sub-panel { height: 100%; display: flex; flex-direction: column; }
+    .accordion-content { flex: 1; overflow-y: auto; }
 }

@@ -204,10 +204,13 @@ function renderLists(data) {
     });
 }
 
+// [최적화] 날짜 포맷 함수 (시:분:초 모두 두 자리 맞춤)
 function formatDateShort(isoStr) {
     if (!isoStr) return '-';
     const d = new Date(isoStr);
-    return `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${d.getMinutes().toString().padStart(2,'0')}`;
+    
+    // 예: 1/20 09:05:07 (시간도 09로 표시됨)
+    return `${d.getMonth()+1}/${d.getDate()} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}`;
 }
 
 async function submitForm() {

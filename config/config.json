@@ -2,8 +2,7 @@
   "system": {
     "year": 2026,
     "semester": "겨울",
-    "week": 2,
-    "startDate": "2026-01-05"
+    "week": 2
   },
   "overrides": {
     "WED_EXERCISE_OPEN": null,

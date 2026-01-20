@@ -55,13 +55,13 @@ class TimeManager {
         }
     }
 
-    resetSemester(newSemester) {
-        // 이제 날짜 계산 로직이 없으므로, 단순히 표시용 텍스트만 바꿉니다.
+    // [관리자용] 학기 및 주차 강제 설정 (Override)
+    resetSemester(newSemester, newWeek) {
+        // 입력받은 값으로 설정 덮어쓰기
         this.config.system.semester = newSemester;
-        this.config.system.week = 1; 
-        this.resetOverrides(); 
-        this.saveConfig();
-        console.log(`🔄 [TimeManager] ${newSemester} 개강 (표시용 주차 리셋)`);
+        this.config.system.week = newWeek; // [변경] 1로 고정하던 것을 newWeek로 변경
+        
+        console.log(`🔄 [TimeManager] 시스템 설정 변경: ${newSemester}학기 ${newWeek}주차`);
     }
 
     incrementWeek() {

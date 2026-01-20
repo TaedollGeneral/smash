@@ -147,43 +147,48 @@
      * [기능 2] 학기 초기화 (개강)
      * - 마스터키(admin-auth.js에서 저장됨)를 함께 전송해야 함
      */
-    async function handleResetSemester() {
-        const newSemester = semesterSelect.value;
-        const masterKey = window.SMASH_ADMIN_KEY; // 인증된 키 가져오기
+/**
+ * [기능 2] 학기 및 주차 설정 (Override)
+ */
+async function handleResetSemester() {
+    const newSemester = semesterSelect.value;
+    const newWeek = document.getElementById('week-input').value; // [NEW] 주차 값 가져오기
+    const masterKey = window.SMASH_ADMIN_KEY; 
 
-        if (!masterKey) {
-            alert("보안 인증이 만료되었습니다. 다시 로그인해주세요.");
-            location.reload();
-            return;
-        }
-
-        if (!confirm(`정말로 [${newSemester}학기]를 시작하시겠습니까?\n\n⚠️ 주의: 현재 주차가 '1주차'로 초기화됩니다.`)) {
-            return;
-        }
-
-        try {
-            const res = await fetch('/api/admin/semester', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    masterKey: masterKey,
-                    semester: newSemester
-                })
-            });
-
-            const result = await res.json();
-            if (result.success) {
-                alert("✅ 개강 처리가 완료되었습니다!");
-                location.reload(); // 새로고침하여 변경된 학기/주차 반영
-            } else {
-                alert("❌ 실패: " + result.message);
-            }
-        } catch (err) {
-            console.error(err);
-            alert("서버 통신 오류");
-        }
+    if (!masterKey) {
+        alert("보안 인증이 만료되었습니다. 다시 로그인해주세요.");
+        location.reload();
+        return;
     }
 
+    // 메시지 수정: "초기화"가 아니라 "설정"임을 명시
+    if (!confirm(`[${newSemester}학기 ${newWeek}주차]로 설정을 변경하시겠습니까?\n\n⚠️ 주의: 현재 시스템의 시간이 이 기준으로 변경됩니다.`)) {
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/admin/semester', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                masterKey: masterKey,
+                semester: newSemester,
+                week: newWeek // [NEW] 주차 데이터 전송
+            })
+        });
+
+        const result = await res.json();
+        if (result.success) {
+            alert("✅ 설정이 반영되었습니다!");
+            location.reload(); 
+        } else {
+            alert("❌ 실패: " + result.message);
+        }
+    } catch (err) {
+        console.error(err);
+        alert("서버 통신 오류");
+    }
+}
     // 실행
     init();
 

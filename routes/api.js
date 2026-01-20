@@ -138,22 +138,21 @@ router.post('/admin/verify', (req, res) => {
     }
 });
 
-// 8. [NEW] 학기 개강/초기화 (관리자 패널에서 호출)
+
+// 8. [수정] 학기 및 주차 설정
 router.post('/admin/semester', (req, res) => {
-    const { masterKey, semester } = req.body;
+    const { masterKey, semester, week } = req.body; // [NEW] week 추가
     
-    // 보안 검사
     if (!TimeManager.checkMasterKey(masterKey)) {
         return res.json({ success: false, message: "관리자 권한이 없습니다." });
     }
 
-    if (!semester) return res.json({ success: false, message: "학기 정보가 없습니다." });
+    if (!semester || !week) return res.json({ success: false, message: "정보가 부족합니다." });
 
-    // TimeManager에게 초기화 명령
-    TimeManager.resetSemester(semester);
-    res.json({ success: true, message: `${semester} 개강 처리가 완료되었습니다.` });
+    // TimeManager에게 (학기, 주차) 전달
+    TimeManager.resetSemester(semester, parseInt(week));
+    res.json({ success: true, message: `${semester}학기 ${week}주차로 설정되었습니다.` });
 });
-
 
 // ============================================================
 // [Helper] 본인 확인 함수 (DB 조회) - 내부 사용
