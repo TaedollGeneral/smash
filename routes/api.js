@@ -168,14 +168,22 @@ function checkUserAuth(id, pwd) {
     });
 }
 
-// 9. [NEW] 특정 시간 강제 변경
+// 9. [수정] 특정 시간 강제 변경 (검증 로직 포함)
 router.post('/admin/override', (req, res) => {
-    const { masterKey, key, value } = req.body;
-    if (!TimeManager.checkMasterKey(masterKey)) return res.json({ success: false, message: "권한 없음" });
+    const { masterKey, key, day, time } = req.body;
     
-    // TimeManager에게 설정 변경 요청
-    TimeManager.updateOverride(key, value);
-    res.json({ success: true });
+    if (!TimeManager.checkMasterKey(masterKey)) {
+        return res.json({ success: false, message: "권한 없음" });
+    }
+    
+    try {
+        // 성공 시 아무것도 리턴 안 함, 실패 시 throw Error
+        TimeManager.updateOverride(key, parseInt(day), time);
+        res.json({ success: true });
+    } catch (err) {
+        // TimeManager가 검증 실패 시 던진 에러 메시지를 그대로 전달
+        res.json({ success: false, message: err.message });
+    }
 });
 
 // 10. [NEW] 모든 오버라이드 초기화

@@ -169,35 +169,50 @@
         </div>
     </div>
 
-    <div id="admin-time-modal" class="admin-layer" style="display: none;">
-        <div class="admin-auth-box" style="max-width: 350px;">
-            <h4 style="margin-bottom: 15px;">⏰ 시간 강제 변경</h4>
-            
-            <select id="override-target" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px;">
-                <option value="WED_EXERCISE">수요일 운동 (WED_EXERCISE)</option>
-                <option value="WED_GUEST">수요일 게스트 (WED_GUEST)</option>
-                <option value="WED_LESSON">수요일 레슨 (WED_LESSON)</option>
-                <option value="FRI_EXERCISE">금요일 운동 (FRI_EXERCISE)</option>
-                <option value="FRI_GUEST">금요일 게스트 (FRI_GUEST)</option>
-            </select>
+<div id="admin-time-modal" class="admin-layer" style="display: none; z-index: 20000;">
+    <div class="admin-auth-box" style="max-width: 350px;">
+        <h4 style="margin-bottom: 15px;">⏰ 시간 강제 변경</h4>
+        
+        <label style="display:block; text-align:left; font-size:12px; color:#666; margin-bottom:5px;">변경 대상</label>
+        <select id="override-target" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px;">
+            <option value="WED_EXERCISE">수요일 운동 (WED_EXERCISE)</option>
+            <option value="WED_GUEST">수요일 게스트 (WED_GUEST)</option>
+            <option value="WED_LESSON">수요일 레슨 (WED_LESSON)</option>
+            <option value="FRI_EXERCISE">금요일 운동 (FRI_EXERCISE)</option>
+            <option value="FRI_GUEST">금요일 게스트 (FRI_GUEST)</option>
+        </select>
 
-            <select id="override-type" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px;">
-                <option value="OPEN">오픈 시간 (OPEN)</option>
-                <option value="CLOSE">투표 마감 (CLOSE)</option>
-                <option value="CANCEL">취소 마감 (CANCEL)</option>
-            </select>
+        <select id="override-type" style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px;">
+            <option value="OPEN">오픈 시간 (OPEN)</option>
+            <option value="CLOSE">투표 마감 (CLOSE)</option>
+            <option value="CANCEL">취소 마감 (CANCEL)</option>
+        </select>
 
-<input type="time" id="override-time" style="width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 5px; font-size: 18px; text-align: center;">
-            <div class="auth-btns">
-                <button onclick="closeTimeModal()" style="background: #eee; color: #333;">취소</button>
-                <button onclick="submitTimeOverride()" style="background: #6f42c1; color: white; font-weight: bold;">변경 적용</button>
-            </div>
-            <div style="margin-top: 10px;">
-                <button onclick="resetAllOverrides()" style="width: 100%; background: #dc3545; color: white; border: none; padding: 8px; border-radius: 5px; font-size: 12px;">🔄 모든 시간 초기화 (원상복구)</button>
-            </div>
+        <div style="border-top:1px dashed #ddd; margin: 10px 0;"></div>
+
+        <label style="display:block; text-align:left; font-size:12px; color:#666; margin-bottom:5px;">변경할 요일 (이번 주차)</label>
+        <select id="override-day" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px; font-weight:bold;">
+            <option value="-2">토요일 (주차 시작)</option>
+            <option value="-1">일요일</option>
+            <option value="0">월요일</option>
+            <option value="1">화요일</option>
+            <option value="2">수요일</option>
+            <option value="3">목요일</option>
+            <option value="4">금요일</option>
+        </select>
+        
+        <label style="display:block; text-align:left; font-size:12px; color:#666; margin-bottom:5px;">변경할 시간</label>
+        <input type="time" id="override-time" style="width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 5px; font-size: 18px; text-align: center;">
+        
+        <div class="auth-btns">
+            <button onclick="closeTimeModal()" style="background: #eee; color: #333;">취소</button>
+            <button onclick="submitTimeOverride()" style="background: #6f42c1; color: white; font-weight: bold;">변경 적용</button>
+        </div>
+        <div style="margin-top: 10px;">
+            <button onclick="resetAllOverrides()" style="width: 100%; background: #dc3545; color: white; border: none; padding: 8px; border-radius: 5px; font-size: 12px;">🔄 모든 시간 초기화</button>
         </div>
     </div>
-
+</div>
     <script src="js/script.js?v=final_03"></script>
     <script src="js/admin-auth.js?v=final_03"></script>
     <script src="js/admin-dashboard.js?v=final_03"></script>

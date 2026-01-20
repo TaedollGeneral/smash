@@ -53,43 +53,93 @@ class TimeManager {
     }
 
 /**
-     * [수정됨] "시간(HH:MM)"만 입력받아, 자동으로 '이번 주 해당 요일'의 날짜와 결합합니다.
-     * 절대 날짜를 입력받지 않으므로, 주간 반복 시스템의 철학을 완벽하게 따릅니다.
+     * [최종 수정] 요일 Offset(-2~4)과 시간을 받아 저장하되, '시간 순서'를 검증함
      */
-    updateOverride(key, timeStr) {
+    updateOverride(key, dayOffset, timeStr) {
         if (!timeStr) return;
 
-        // 1. 키에서 요일 추출 (예: WED_EXERCISE_OPEN -> WED)
-        const targetDay = key.startsWith('FRI') ? 'FRI' : 'WED';
+        // 1. 기준이 되는 '이번 주 월요일' 찾기
+        // (getActivityDate 로직 역이용: 수요일 날짜에서 2일 빼면 월요일)
+        const wedDate = this.getActivityDate('WED'); 
+        const anchorMon = new Date(wedDate);
+        anchorMon.setDate(wedDate.getDate() - 2); 
 
-        // 2. [핵심] '이번 주'의 해당 요일 날짜를 서버가 직접 계산 (클라이언트 날짜 무시)
-        const targetDate = this.getActivityDate(targetDay);
+        // 2. 사용자가 선택한 날짜/시간 생성
+        const newDate = new Date(anchorMon);
+        newDate.setDate(anchorMon.getDate() + dayOffset);
+        const [h, m] = timeStr.split(':').map(Number);
+        newDate.setHours(h, m, 0, 0);
 
-        // 3. 입력받은 시간(HH:MM)을 기준 날짜에 적용
-        const [hour, minute] = timeStr.split(':').map(Number);
-        targetDate.setHours(hour, minute, 0, 0);
+        // 3. [검증] 이 시간으로 바꿨을 때 순서가 꼬이지 않는지 확인
+        this.validateOverrideOrThrow(key, newDate);
 
-        // 4. 완성된 시점을 저장
-        this.config.overrides[key] = targetDate.toISOString();
-        
+        // 4. 통과되면 저장
+        this.config.overrides[key] = newDate.toISOString();
         this.saveConfig();
-        console.log(`⚡ [TimeManager] Override 적용: ${key} -> ${timeStr} (기준일: ${this.formatDate(targetDate)})`);
+        console.log(`⚡ [TimeManager] Override 성공: ${key} -> ${this.formatDate(newDate)}`);
     }
 
+    /**
+     * [NEW] 시간 순서 검증기 (Open < Close <= Cancel)
+     */
+    validateOverrideOrThrow(key, newDate) {
+        // 키 분석: WED_EXERCISE_OPEN -> [WED_EXERCISE, OPEN]
+        const lastUnderscore = key.lastIndexOf('_');
+        const catId = key.substring(0, lastUnderscore); // 예: WED_EXERCISE
+        const type = key.substring(lastUnderscore + 1); // 예: OPEN
+
+        // 현재 설정된 규칙들 가져오기 (오버라이드 포함)
+        // 주의: getRule은 '현재' 설정을 가져오므로, 우리가 바꾸려는 값만 newDate로 교체해서 비교해야 함
+        const parts = catId.split('_'); // [WED, EXERCISE]
+        const currentRule = this.getRule(catId, parts[0], parts[1].toLowerCase());
+
+        // 가상의 규칙 세트 생성
+        const testRule = {
+            openTime: (type === 'OPEN') ? newDate : currentRule.openTime,
+            closeTime: (type === 'CLOSE') ? newDate : currentRule.closeTime,
+            cancelTime: (type === 'CANCEL') ? newDate : currentRule.cancelTime
+        };
+
+        // 검증 1: 오픈이 마감보다 늦거나 같으면 안 됨
+        if (testRule.openTime >= testRule.closeTime) {
+            throw new Error(`⛔ 불가: 투표 오픈(${this.formatDate(testRule.openTime)})이 마감보다 늦을 수 없습니다.`);
+        }
+
+        // 검증 2: 마감이 취소 마감보다 늦으면 안 됨 (보통 취소는 마감과 같거나 더 늦게까지 가능)
+        if (testRule.closeTime > testRule.cancelTime) {
+            throw new Error(`⛔ 불가: 투표 마감(${this.formatDate(testRule.closeTime)})이 취소 마감보다 늦을 수 없습니다.`);
+        }
+        
+        // 검증 3: 오픈이 취소 마감보다 늦으면 당연히 안 됨
+        if (testRule.openTime >= testRule.cancelTime) {
+            throw new Error("⛔ 불가: 오픈 시간이 취소 마감 시간보다 늦습니다.");
+        }
+    }
+    
     getSystemInfo() { return this.config.system; }
 
+/**
+     * [수정됨] 토요일 00시 기준으로 주차가 넘어가도록 날짜 계산 로직 수정
+     * - 토(6), 일(0)인 경우, 이미 다음 주 사이클에 진입한 것으로 보고 +7일을 해줌.
+     */
     getActivityDate(targetDay) {
         const now = new Date();
-        const day = now.getDay(); 
-        const hour = now.getHours();
-        const isNextCycle = (day === 6 && hour >= 22);
+        const day = now.getDay(); // 0(일)~6(토)
         
         let targetDate = new Date(now);
+        
+        // 1. 일단 이번 주 월요일을 찾음
+        // (일요일(0)은 JS 달력상 주초지만, 우리는 주말이므로 -6을 해줘야 전주 월요일이 됨)
         const dayDiffToMon = (day === 0) ? -6 : (1 - day);
         targetDate.setDate(now.getDate() + dayDiffToMon);
 
-        if (isNextCycle) targetDate.setDate(targetDate.getDate() + 7);
+        // 2. [핵심] 토요일(6) 00시부터는 '새로운 주'로 간주 -> 다음 주 월요일로 점프
+        // (일요일도 마찬가지로 새 주차의 시작임)
+        if (day === 6 || day === 0) {
+            targetDate.setDate(targetDate.getDate() + 7);
+        }
 
+        // 3. 월요일 기준으로 목표 요일(수/금) 날짜 계산
         const offset = (targetDay === 'WED') ? 2 : 4;
         targetDate.setDate(targetDate.getDate() + offset);
         targetDate.setHours(0, 0, 0, 0);
