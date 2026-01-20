@@ -168,4 +168,24 @@ function checkUserAuth(id, pwd) {
     });
 }
 
+// 9. [NEW] 특정 시간 강제 변경
+router.post('/admin/override', (req, res) => {
+    const { masterKey, key, value } = req.body;
+    if (!TimeManager.checkMasterKey(masterKey)) return res.json({ success: false, message: "권한 없음" });
+    
+    // TimeManager에게 설정 변경 요청
+    TimeManager.updateOverride(key, value);
+    res.json({ success: true });
+});
+
+// 10. [NEW] 모든 오버라이드 초기화
+router.post('/admin/override/reset', (req, res) => {
+    const { masterKey } = req.body;
+    if (!TimeManager.checkMasterKey(masterKey)) return res.json({ success: false, message: "권한 없음" });
+
+    TimeManager.resetOverrides();
+    TimeManager.saveConfig();
+    res.json({ success: true });
+});
+
 module.exports = router;

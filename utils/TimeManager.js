@@ -64,6 +64,23 @@ class TimeManager {
         console.log(`🔄 [TimeManager] 시스템 설정 변경: ${newSemester}학기 ${newWeek}주차`);
     }
 
+    // [관리자용] 특정 시간 규칙 덮어쓰기
+    updateOverride(key, isoTimeStr) {
+        // 입력받은 시간 문자열을 Date 객체로 변환하여 저장하거나, 문자열 그대로 저장
+        // 여기서는 편의상 ISO 문자열로 저장하고 getRule에서 변환해서 씁니다.
+        // 하지만 getRule 로직상 Date 객체를 기대할 수 있으므로, 
+        // config 파일에는 문자열로 저장되지만, 로드될 때는 문자열입니다.
+        // 따라서 getRule에서 new Date() 처리가 되어있는지 확인해야 합니다.
+        // (현재 코드는 getRule에서 overrides 값을 그대로 씁니다.)
+        
+        // 안전하게 ISO String으로 통일
+        const dateObj = new Date(isoTimeStr);
+        this.config.overrides[key] = dateObj.toISOString(); 
+        
+        this.saveConfig();
+        console.log(`⚡ [TimeManager] Override 적용: ${key} = ${this.config.overrides[key]}`);
+    }
+
     incrementWeek() {
         this.config.system.week += 1;
         this.resetOverrides(); 
@@ -71,13 +88,18 @@ class TimeManager {
         console.log(`🆙 [TimeManager] ${this.config.system.week}주차로 변경됨.`);
     }
 
+// [수정] 오버라이드 초기화 (안전 버전)
     resetOverrides() {
-        this.config.overrides = {};
-        CATEGORIES.forEach(cat => {
-            this.config.overrides[`${cat.id}_OPEN`] = null;
-            this.config.overrides[`${cat.id}_CLOSE`] = null;
-            this.config.overrides[`${cat.id}_CANCEL`] = null;
-        });
+        // CATEGORIES 변수 의존성 없이, 직접 모든 키를 null로 초기화합니다.
+        this.config.overrides = {
+            "WED_EXERCISE_OPEN": null, "WED_EXERCISE_CLOSE": null, "WED_EXERCISE_CANCEL": null,
+            "WED_GUEST_OPEN": null,    "WED_GUEST_CLOSE": null,    "WED_GUEST_CANCEL": null,
+            "WED_LESSON_OPEN": null,   "WED_LESSON_CLOSE": null,   "WED_LESSON_CANCEL": null,
+            "FRI_EXERCISE_OPEN": null, "FRI_EXERCISE_CLOSE": null, "FRI_EXERCISE_CANCEL": null,
+            "FRI_GUEST_OPEN": null,    "FRI_GUEST_CLOSE": null,    "FRI_GUEST_CANCEL": null
+        };
+        
+        console.log("🔄 [TimeManager] 모든 오버라이드 초기화 (메모리 반영됨)");
     }
 
     getSystemInfo() {

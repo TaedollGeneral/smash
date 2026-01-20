@@ -193,3 +193,55 @@ async function handleResetSemester() {
     init();
 
 })();
+
+/* ---------------------------------------------------------
+   [기능 3] 시간 강제 수정 (Override)
+   --------------------------------------------------------- */
+function openTimeModal() {
+    document.getElementById('admin-time-modal').style.display = 'flex';
+}
+
+function closeTimeModal() {
+    document.getElementById('admin-time-modal').style.display = 'none';
+}
+
+async function submitTimeOverride() {
+    const target = document.getElementById('override-target').value; // 예: WED_EXERCISE
+    const type = document.getElementById('override-type').value;     // 예: OPEN
+    const timeVal = document.getElementById('override-time').value;  // 예: 2026-01-20T18:00
+    const masterKey = window.SMASH_ADMIN_KEY;
+
+    if (!timeVal) { alert("시간을 설정해주세요."); return; }
+
+    // 키 조합 (예: WED_EXERCISE_OPEN)
+    const overrideKey = `${target}_${type}`;
+
+    try {
+        const res = await fetch('/api/admin/override', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ masterKey, key: overrideKey, value: timeVal })
+        });
+        const result = await res.json();
+        if (result.success) {
+            alert(`✅ 변경 완료!\n[${overrideKey}] -> ${timeVal.replace('T', ' ')}`);
+            location.reload();
+        } else {
+            alert("❌ 실패: " + result.message);
+        }
+    } catch (err) { console.error(err); alert("통신 오류"); }
+}
+
+async function resetAllOverrides() {
+    if (!confirm("정말 모든 강제 설정을 초기화하고 원래 규칙대로 돌리시겠습니까?")) return;
+    const masterKey = window.SMASH_ADMIN_KEY;
+    try {
+        const res = await fetch('/api/admin/override/reset', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ masterKey })
+        });
+        const result = await res.json();
+        if (result.success) { alert("✅ 초기화 완료!"); location.reload(); }
+    } catch (err) { alert("통신 오류"); }
+}
