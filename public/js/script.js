@@ -170,40 +170,54 @@ async function fetchStatus() {
     } catch (err) { console.error(err); }
 }
 
-function renderLists(data) {
-    els.listExercise.innerHTML = '';
-    els.listGuest.innerHTML = '';
-    els.listLesson.innerHTML = '';
+// [수정] 타이머 렌더링 함수 (마감됨 로직 완전 삭제)
+function renderSingleTimer(element, data) {
+    if (!element || !data) return;
 
-    if (!data || data.length === 0) {
-        els.listExercise.innerHTML = '<tr><td colspan="3">신청자가 없습니다.</td></tr>';
-        return;
+    const now = new Date();
+    const target = new Date(data.target);
+    let diff = target - now;
+    if (diff < 0) diff = 0;
+
+    const timeStr = formatTime(diff);
+    
+    let labelText = "";
+    let colorClass = "text-gray"; 
+
+    switch (data.state) {
+        case 'OPEN_WAIT':
+            labelText = "오픈까지";
+            colorClass = "text-gray";
+            break;
+        case 'CLOSING':
+            labelText = "투표 마감까지"; 
+            colorClass = "text-green"; 
+            break;
+        case 'CANCEL_CLOSING':
+            labelText = "취소 마감까지";
+            colorClass = "text-blue"; 
+            break;
+        // [삭제] case 'ENDED' -> 더 이상 서버에서 이 상태를 보내지 않으므로 삭제!
+        default:
+            // 혹시 모를 예외 상황에도 오픈 대기 상태로 처리
+            labelText = "오픈까지";
+            colorClass = "text-gray";
+            break;
     }
 
-    const exercises = data.filter(d => d.category === 'exercise');
-    const guests = data.filter(d => d.category === 'guest');
-    const lessons = data.filter(d => d.category === 'lesson');
+    // [삭제] const displayTime = (data.state === 'ENDED') ? "마감됨" : timeStr;
+    // [변경] 무조건 시간(timeStr)을 보여줌
+    const displayTime = timeStr;
 
-    exercises.forEach((item, idx) => {
-        const row = `<tr><td>${idx + 1}</td><td>${item.user_name || item.student_id}</td><td>${formatDateShort(item.created_at)}</td></tr>`;
-        els.listExercise.innerHTML += row;
-    });
-
-    guests.forEach((item, idx) => {
-        const row = `<tr><td>${idx + 1}</td><td>${item.guest_name}</td><td>${item.user_name || item.student_id}</td></tr>`;
-        els.listGuest.innerHTML += row;
-    });
-
-    lessons.forEach((item, idx) => {
-        const startMin = 18 * 60 + (idx * 15);
-        const h = Math.floor(startMin / 60);
-        const m = startMin % 60;
-        const timeStr = `${h}:${m.toString().padStart(2, '0')}`;
-        const row = `<tr><td>${idx + 1}</td><td>${item.user_name || item.student_id}</td><td>${timeStr}</td></tr>`;
-        els.listLesson.innerHTML += row;
-    });
+    // HTML 구조 업데이트
+    element.innerHTML = `
+        <div class="timer-label">${labelText}</div>
+        <div class="timer-number ${colorClass}">${displayTime}</div>
+    `;
+    
+    // 스타일 클래스 적용 (컨테이너)
+    element.className = "timer-container"; 
 }
-
 // [최적화] 날짜 포맷 함수 (시:분:초 모두 두 자리 맞춤)
 function formatDateShort(isoStr) {
     if (!isoStr) return '-';

@@ -170,14 +170,36 @@ class TimeManager {
         return { valid: true };
     }
 
+    /**
+     * [핵심 로직 수정] 상태 계산기
+     * - ENDED(마감됨) 상태를 제거하고, 취소 마감이 지나면 즉시 '다음 주 오픈 대기'로 전환
+     */
     calcCategoryState(catId, day, type) {
         const now = new Date();
         const rule = this.getRule(catId, day, type); 
 
-        if (now < rule.openTime) return { state: 'OPEN_WAIT', target: rule.openTime, rule };
-        if (now < rule.closeTime) return { state: 'CLOSING', target: rule.closeTime, rule };
-        if (now < rule.cancelTime) return { state: 'CANCEL_CLOSING', target: rule.cancelTime, rule };
-        return { state: 'ENDED', target: null, rule };
+        // 1. 아직 오픈 시간 전이면 -> [오픈 대기]
+        if (now < rule.openTime) {
+            return { state: 'OPEN_WAIT', target: rule.openTime, rule };
+        }
+        
+        // 2. 오픈됨 ~ 신청 마감 전이면 -> [신청 마감까지 (투표 마감)]
+        if (now < rule.closeTime) {
+            return { state: 'CLOSING', target: rule.closeTime, rule };
+        }
+        
+        // 3. 신청 마감 ~ 취소 마감 전이면 -> [취소 마감까지]
+        if (now < rule.cancelTime) {
+            return { state: 'CANCEL_CLOSING', target: rule.cancelTime, rule };
+        }
+
+        // 4. [수정] 취소 마감 시간조차 지났다면?
+        // -> "마감됨(ENDED)"을 띄우는 게 아니라, "다음 주 오픈 시간"을 계산해서 보여줍니다.
+        // -> 현재 규칙의 오픈 시간에서 정확히 7일을 더하면 다음 주 오픈 시간이 됩니다.
+        const nextOpenTime = new Date(rule.openTime);
+        nextOpenTime.setDate(nextOpenTime.getDate() + 7);
+
+        return { state: 'OPEN_WAIT', target: nextOpenTime, rule };
     }
 
     getRule(catId, day, type) {

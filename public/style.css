@@ -111,6 +111,9 @@ body {
     white-space: nowrap;
     position: relative;
     top: -3px; /* 제목 전체를 살짝 위로 (시각적 보정) */
+
+    font-size: 15px;  /* 숫자를 줄이면(예: 14px, 15px) 작아집니다 */
+    font-weight: 700; /* 굵기 (필요하면 조절) */
 }
 
 /* 텍스트 미세 조정 (이모티콘 높이 맞춤) */
