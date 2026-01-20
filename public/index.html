@@ -125,50 +125,48 @@
             </div>
         </div>
     </div>
-
+    
     <div id="admin-dashboard-panel" class="admin-panel" style="display: none;">
         <div class="admin-header">
-            <h4 style="margin: 0;">🛠️ 임원진 전용 도구</h4>
-            <button id="dashboard-close-btn" style="background:none; border:none; font-size:20px; cursor:pointer;">✕</button>
+            <h4>🛠️ 임원진 도구</h4>
+            <button id="dashboard-close-btn" class="icon-btn">✕</button>
         </div>
-        <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
-        
-        <div class="admin-menu-grid" style="display: flex; flex-direction: column; gap: 10px;">
-            <div class="menu-item">
-                <div style="display: flex; gap: 5px; margin-bottom: 5px;">
-                    <input type="number" id="max-capacity" placeholder="정원(명)" style="width: 80px; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
-                    <button id="btn-copy-list" style="flex: 1; background-color: #28a745; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer;">
-                        📋 명단 복사 & 공유
-                    </button>
-                </div>
-            </div>
-
-            <div class="menu-item" style="border-top: 1px dashed #ddd; padding-top: 10px;">
-                <label style="font-size: 12px; color: #666; font-weight: bold;">학기 및 주차 설정</label>
-                <div style="display: flex; gap: 5px; margin-top: 5px;">
-                    <select id="semester-select" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px; flex: 1;">
-                        <option value="1">1학기</option>
-                        <option value="여름">여름학기</option>
-                        <option value="2">2학기</option>
-                        <option value="겨울">겨울학기</option>
-                    </select>
-                    
-                    <input type="number" id="week-input" value="1" min="1" style="width: 50px; padding: 8px; border: 1px solid #ddd; border-radius: 5px; text-align: center;">
-                    
-                    <button id="btn-reset-semester" style="background-color: #dc3545; color: white; border: none; border-radius: 5px; padding: 0 10px; font-weight: bold; cursor: pointer; white-space: nowrap;">
-                        설정!
-                    </button>
-                </div>
-            </div>
-
-            <div class="menu-item" style="border-top: 1px dashed #ddd; padding-top: 10px;">
-                <button onclick="openTimeModal()" style="width: 100%; background-color: #6f42c1; color: white; border: none; padding: 10px; border-radius: 5px; font-weight: bold; cursor: pointer;">
-                    ⏰ 오픈/마감 시간 상세 수정
+    
+    <div class="admin-body">
+        <section class="admin-section">
+            <h5 class="section-title">Daily Ops</h5>
+            <div class="control-row">
+                <input type="number" id="max-capacity" placeholder="정원(명)" class="modern-input" style="flex: 0.4;">
+                <button id="btn-copy-list" class="modern-btn btn-primary">
+                    📋 명단 복사 & 공유
                 </button>
             </div>
-        </div>
-    </div>
+        </section>
 
+        <section class="admin-section">
+            <h5 class="section-title">System Config</h5>
+            
+            <div class="control-row">
+                <select id="semester-select" class="modern-select">
+                    <option value="1">1학기</option>
+                    <option value="여름">여름학기</option>
+                    <option value="2">2학기</option>
+                    <option value="겨울">겨울학기</option>
+                </select>
+                <input type="number" id="week-input" value="1" min="1" class="modern-input center-text" placeholder="주차">
+                <button id="btn-reset-semester" class="modern-btn btn-outline-danger">
+                    설정
+                </button>
+            </div>
+            
+            <div class="control-row mt-2">
+                <button onclick="openTimeModal()" class="modern-btn btn-secondary full-width">
+                    ⏰ 오픈/마감 시간 상세 조정
+                </button>
+            </div>
+        </section>
+    </div>
+</div>
 <div id="admin-time-modal" class="admin-layer" style="display: none; z-index: 20000;">
     <div class="admin-auth-box" style="max-width: 350px;">
         <h4 style="margin-bottom: 15px;">⏰ 시간 강제 변경</h4>
