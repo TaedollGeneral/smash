@@ -1,21 +1,20 @@
 {
-  "name": "SMASH 운동 투표",
   "short_name": "SMASH",
-  "description": "SMASH 운동 신청",
+  "name": "UOS SMASH",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
   "theme_color": "#007bff",
+  "background_color": "#ffffff",
+  
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/3556/3556943.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "src": "/images/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
     },
     {
-      "src": "https://cdn-icons-png.flaticon.com/192/3556/3556943.png",
-      "sizes": "192x192",
+      "src": "/images/android-chrome-512x512.png",
+      "sizes": "512x512",
       "type": "image/png"
     }
   ]
