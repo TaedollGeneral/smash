@@ -29,9 +29,9 @@ function syncUsers() {
             const parts = line.split(',').map(t => t.trim());
             
             // [중요] 여기서 순서를 확인하세요! (0:이름, 1:학번, 2:비번)
-            const name = parts[0];
+            const name = parts[2];
             const id = parts[1];
-            const pwd = parts[2];
+            const pwd = parts[3];
 
             // 미리보기 출력 (이게 깨져 보이면 인코딩 문제입니다!)
             if (index <= 3) {
