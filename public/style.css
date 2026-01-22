@@ -1,12 +1,9 @@
 /**
  * [FILE: style.css]
- * 역할: 2026 SMASH 서비스 통합 스타일시트 (Recovered & Modernized)
- * 최종 수정일: 2026.01.21
+ * 역할: 스크롤 복구 및 UI 안정화 (Fixed Header, Scrollable Content)
  */
 
-/* ---------------------------------------------------------
-   1. [기본 설정 & 애니메이션]
-   --------------------------------------------------------- */
+/* 1. 기본 설정 */
 @keyframes slideUp {
     from { transform: translateY(100%); }
     to { transform: translateY(0); }
@@ -17,236 +14,159 @@ body {
     background-color: #f0f2f5;
     margin: 0;
     padding: 10px 10px env(safe-area-inset-bottom, 10px) 10px;
-    height: 100dvh;
+    height: 100dvh; /* 모바일 브라우저 높이 대응 */
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
     gap: 10px; 
-    overflow: hidden;
+    overflow: hidden; /* 전체 화면 스크롤 방지 */
 }
 
-/* ---------------------------------------------------------
-   2. [상단 헤더 영역]
-   --------------------------------------------------------- */
+/* 2. 헤더 */
 .header-container {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background-color: white;
-    padding: 12px 20px;
-    border-radius: 10px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    border: 1px solid #ddd;
+    display: flex; justify-content: space-between; align-items: center;
+    background-color: white; padding: 12px 20px; border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1); border: 1px solid #ddd;
     flex-shrink: 0;
 }
+.left-section { display: flex; align-items: center; gap: 15px; }
+.title-group { display: flex; flex-direction: column; gap: 2px; }
+.title1 { font-size: 20px; font-weight: 800; margin: 0; line-height: 1.1; color: #111; }
+.title { font-size: 13px; color: #666; margin: 0; }
+.divider { width: 1px; height: 20px; background: #e5e7eb; margin: 0 15px; }
+.day-toggle { display: flex; background: #f3f4f6; padding: 4px; border-radius: 8px; }
+.day-btn { border: none; background: none; padding: 6px 12px; font-weight: 700; border-radius: 6px; cursor: pointer; color: #999; }
+.day-btn.active { background: white; color: #2563eb; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
 
-.left-section { 
-    display: flex; align-items: center; gap: 15px; 
-}
-
-.title-group { 
-    display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; 
-}
-
-.title1 { font-size: 20px; font-weight: 800; color: #111827; margin: 0; line-height: 1.1; }
-.title { font-size: 13px; font-weight: 400; color: #6b7280; margin: 0; }
-
-.divider {
-    width: 1px; height: 20px; background-color: #e5e7eb; margin: 0 15px; display: block;
-}
-
-.day-toggle { display: flex; background-color: #f3f4f6; padding: 4px; border-radius: 8px; }
-.day-btn {
-    border: none; background: none; padding: 6px 12px; font-size: 13px; font-weight: 700;
-    border-radius: 6px; cursor: pointer; color: #9ca3af; transition: all 0.2s;
-}
-.day-btn.active { background-color: white; color: #2563eb; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-
-/* ---------------------------------------------------------
-   3. [대시보드 & 아코디언 패널]
-   --------------------------------------------------------- */
+/* 3. 대시보드 (스크롤 핵심 수정) */
 .dashboard-area {
-    display: flex; flex: 1; gap: 10px; min-height: 0; overflow: hidden;
+    display: flex; flex: 1; gap: 10px;
+    min-height: 0; /* Flex 자식 스크롤 필수 설정 */
 }
 
+/* [수정] 패널 자체는 스크롤 없음 (Flex 컨테이너 역할만) */
 .left-panel, .sub-panel {
-    background-color: white; border-radius: 10px; padding: 10px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1); overflow-y: auto; border: 1px solid #ddd;
+    background-color: white; border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1); border: 1px solid #ddd;
+    display: flex; flex-direction: column; /* 세로 정렬 */
+    overflow: hidden; /* 내부 스크롤만 허용 */
 }
+
 .left-panel { flex: 1.5; }
 .sub-panel { flex: 1; }
-.right-panel-wrapper { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+.right-panel-wrapper { flex: 1; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
 
-/* 아코디언 헤더 */
+/* 아코디언 헤더 (고정) */
 .accordion-header {
-    height: 50px;
+    height: 50px; flex-shrink: 0; /* 크기 안 줄어들게 고정 */
     display: flex; justify-content: space-between; align-items: center;
-    cursor: pointer; flex-shrink: 0; padding: 0 5px; width: 100%; box-sizing: border-box;
+    cursor: pointer; padding: 0 15px; border-bottom: 1px solid #f0f0f0;
 }
-.accordion-header h3 {
-    margin: 0; white-space: nowrap; position: relative; top: -3px; font-size: 15px; font-weight: 700;
+.accordion-header h3 { margin: 0; font-size: 15px; font-weight: 700; }
+.header-right { display: flex; align-items: center; gap: 10px; }
+.timer-container { text-align: right; }
+.timer-number { font-family: monospace; font-weight: 700; font-size: 15px; }
+
+/* [핵심 수정] 내용물 영역에만 스크롤 부여! */
+.accordion-content {
+    flex: 1; /* 남은 공간 다 차지 */
+    overflow-y: auto; /* 내용 넘치면 스크롤 */
+    -webkit-overflow-scrolling: touch; /* 모바일 부드러운 스크롤 */
+    padding: 0;
 }
-.title-adjust { position: relative; top: 2px; margin-left: 2px; }
 
-.header-right { display: flex; align-items: center; gap: 12px; margin-left: auto; }
-
-.timer-container {
-    display: flex; flex-direction: column; justify-content: center; align-items: flex-end;
-    border-left: 1px solid #ddd; padding-left: 12px; height: 30px;
-}
-.timer-label { font-size: 10px; color: #999; margin-bottom: 2px; line-height: 1; }
-.timer-number { font-size: 15px; font-family: monospace; font-weight: 700; letter-spacing: -0.3px; line-height: 1; }
-
-.text-gray { color: #aaa; }
-.text-green { color: #28a745; }
-.text-blue { color: #4c6ef5; } /* 취소 마감용 블루 */
-
-/* ---------------------------------------------------------
-   4. [테이블 & 데이터]
-   --------------------------------------------------------- */
+/* 4. 테이블 */
 table { width: 100%; border-collapse: collapse; font-size: 14px; }
 th {
-    background-color: #f8f9fa; position: sticky; top: 0; padding: 8px;
-    border-bottom: 2px solid #ddd; font-size: 13px; z-index: 10;
+    background-color: #f8f9fa; position: sticky; top: 0;
+    padding: 10px; border-bottom: 2px solid #ddd; font-size: 13px; z-index: 10;
 }
-td { padding: 8px; border-bottom: 1px solid #eee; text-align: center; }
-th:first-child, td:first-child { width: 40px; background-color: #f1f1f1; font-weight: bold; }
+td { padding: 10px; border-bottom: 1px solid #eee; text-align: center; }
+th:first-child, td:first-child { width: 45px; background: #f1f1f1; font-weight: bold; }
 
-/* ---------------------------------------------------------
-   5. [하단 컨트롤 패널]
-   --------------------------------------------------------- */
+/* 5. 하단 패널 */
 .control-panel {
-    background-color: #333; color: white; padding: 10px 15px; border-radius: 10px;
-    display: flex; align-items: center; justify-content: space-between;
-    flex-wrap: wrap; gap: 10px; flex-shrink: 0;
-    padding-bottom: calc(10px + env(safe-area-inset-bottom));
+    background: #333; color: white; padding: 10px 15px; border-radius: 10px;
+    display: flex; justify-content: space-between; align-items: center;
+    flex-shrink: 0; flex-wrap: wrap; gap: 10px;
 }
+.input-group { display: flex; gap: 8px; }
+input, select { padding: 8px; border-radius: 5px; border: 1px solid #ccc; }
+.submit-btn { background: #007bff; color: white; border: none; padding: 8px 20px; border-radius: 5px; font-weight: bold; }
+.admin-btn { background: none; border: none; font-size: 20px; cursor: pointer; }
 
-.input-group { display: flex; align-items: center; gap: 8px; }
-input[type="text"], input[type="password"] {
-    padding: 6px; border: 1px solid #ccc; border-radius: 4px; width: 80px; font-size: 14px;
-}
-select { padding: 6px; border-radius: 4px; }
-.radio-label { font-size: 14px; margin-right: 5px; cursor: pointer; white-space: nowrap; }
-
-.submit-btn {
-    background-color: #007bff; color: white; border: none; padding: 6px 15px;
-    border-radius: 5px; font-weight: bold; cursor: pointer; white-space: nowrap;
-}
-
-/* [복구됨] 톱니바퀴 버튼 스타일 (투명하게) */
-.admin-btn {
-    background: none; border: none; padding: 5px 10px;
-    font-size: 20px; cursor: pointer; transition: transform 0.2s;
-}
-.admin-btn:hover { transform: rotate(90deg); }
-
-/* ---------------------------------------------------------
-   6. [관리자 모달 & 팝업 (필수 복구)]
-   --------------------------------------------------------- */
-/* [복구됨] 화면 전체를 덮는 검은 배경 (팝업용) */
+/* 6. 모달 & 관리자 패널 */
 .admin-layer {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.6); 
-    z-index: 20000; /* 최상위 우선순위 */
+    background: rgba(0,0,0,0.6); z-index: 20000;
     display: flex; justify-content: center; align-items: center;
 }
-
-/* 인증 박스 (마스터키 입력) */
 .admin-auth-box {
-    background: white; padding: 25px; border-radius: 12px;
+    background: white; padding: 25px; border-radius: 15px;
     width: 90%; max-width: 320px; text-align: center;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }
-.admin-auth-box h4 { margin: 0 0 20px 0; font-size: 1.2rem; color: #333; }
-.admin-auth-box input {
-    width: 100%; padding: 12px; margin-bottom: 20px;
-    border: 1px solid #ddd; border-radius: 8px; font-size: 16px; text-align: center; box-sizing: border-box;
-}
-.auth-btns { display: flex; gap: 10px; }
-.auth-btns button { flex: 1; padding: 12px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
-#auth-cancel-btn { background: #eee; color: #333; }
-#auth-confirm-btn { background: #007bff; color: white; font-weight: bold; }
 
-/* ---------------------------------------------------------
-   7. [관리자 컨트롤 패널 (NEW 모던 디자인)]
-   --------------------------------------------------------- */
+/* 모던 관리자 패널 */
 #admin-dashboard-panel {
     position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
     width: 90%; max-width: 380px;
-    background: rgba(255, 255, 255, 0.98);
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.2);
-    padding: 25px;
-    z-index: 10000;
+    background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(10px);
+    border-radius: 20px; padding: 25px; z-index: 10000;
     display: flex; flex-direction: column; gap: 20px;
-    border: 1px solid rgba(0,0,0,0.05);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.2);
 }
-
-.admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-.admin-header h4 { margin: 0; font-size: 18px; font-weight: 800; color: #333; }
-.icon-btn { background: none; border: none; font-size: 20px; color: #999; cursor: pointer; padding: 5px; }
-
+.admin-header { display: flex; justify-content: space-between; }
 .admin-section { background: #f8f9fa; border-radius: 12px; padding: 15px; border: 1px solid #eee; }
-.section-title { margin: 0 0 10px 0; font-size: 12px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
-
-.control-row { display: flex; gap: 8px; align-items: stretch; }
-.mt-2 { margin-top: 8px; }
-.full-width { width: 100%; }
-.center-text { text-align: center; }
-
-.modern-input, .modern-select {
-    padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; background: white;
-}
-.modern-btn {
-    border: none; border-radius: 8px; padding: 10px 15px; font-size: 14px; font-weight: 600; cursor: pointer;
-    display: flex; align-items: center; justify-content: center; gap: 5px;
-}
-
-.btn-primary { background: #4c6ef5; color: white; flex: 1; box-shadow: 0 4px 10px rgba(76, 110, 245, 0.3); }
+.section-title { font-size: 12px; color: #888; font-weight: 700; margin-bottom: 10px; }
+.control-row { display: flex; gap: 8px; }
+.modern-btn { flex: 1; border: none; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+.btn-primary { background: #4c6ef5; color: white; }
 .btn-secondary { background: #e9ecef; color: #495057; }
-.btn-outline-danger { background: white; border: 1px solid #ff6b6b; color: #ff6b6b; }
+.full-width { width: 100%; }
 
-/* ---------------------------------------------------------
-   8. [반응형 (모바일 & PC)]
-   --------------------------------------------------------- */
+/* 7. 반응형 (모바일) */
 @media (max-width: 768px) {
-    body { padding: 5px; gap: 5px; height: 100vh; overflow: hidden; }
-    .header-container { padding: 10px; }
-    .title1 { font-size: 18px; }
     .dashboard-area { flex-direction: column; gap: 5px; }
     
-    .accordion-item { 
-        display: flex; flex-direction: column; background-color: white;
-        border-radius: 8px; overflow: hidden; padding: 0 10px; border: 1px solid #ddd;
-        transition: flex 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    /* 모바일 아코디언 로직 */
+    .left-panel, .sub-panel {
+        /* 높이 강제 지정 해제, Flex 비율로 조정 */
+        height: auto !important;
+        transition: flex 0.3s ease;
     }
-    .accordion-item:not(.collapsed) { flex: 1; }
-    .accordion-item.collapsed { flex: 0 0 45px; }
-    .accordion-item.collapsed .accordion-content { display: none !important; }
-    
-    .left-panel, .right-panel-wrapper, .sub-panel { height: auto !important; margin: 0; padding: 10px 15px; box-shadow: none; }
-    .right-panel-wrapper { display: contents; }
 
+    /* 닫힌 패널: 제목만 보임 */
+    .accordion-item.collapsed {
+        flex: 0 0 50px; /* 헤더 높이만큼만 */
+        overflow: hidden;
+    }
+    
+    /* 열린 패널: 남은 공간 모두 차지 */
+    .accordion-item:not(.collapsed) {
+        flex: 1;
+        overflow: hidden; /* 내부 스크롤 활성화 */
+    }
+    
+    .accordion-content {
+        /* 열렸을 때만 내용 보임 */
+        display: block; 
+        height: 100%;
+        overflow-y: auto;
+    }
+    
+    .accordion-item.collapsed .accordion-content { display: none; }
+    
     .arrow {
         display: inline-block; width: 8px; height: 8px;
-        border-right: 2px solid #aaa; border-bottom: 2px solid #aaa; margin-left: 10px;
-        transform: rotate(225deg); transition: transform 0.3s ease;
+        border-right: 2px solid #aaa; border-bottom: 2px solid #aaa;
+        margin-left: 10px; transform: rotate(225deg); transition: 0.3s;
     }
     .accordion-item.collapsed .arrow { transform: rotate(45deg); }
-
-    .control-panel { flex-direction: column; gap: 5px; padding: 8px; align-items: stretch; }
-    .input-group:nth-child(1) { display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 5px; }
-    .input-group.mobile-row-2 { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-    .submit-group { margin-left: auto; display: flex; align-items: center; gap: 5px; flex: 1; }
-    .submit-btn { height: 40px; display: flex; align-items: center; justify-content: center; }
+    
+    .control-panel { flex-direction: column; align-items: stretch; }
 }
 
 @media (min-width: 769px) {
-    .arrow { display: none !important; }
-    .accordion-header { cursor: default !important; pointer-events: none; }
-    .dashboard-area { overflow: hidden; }
-    .left-panel, .sub-panel { height: 100%; display: flex; flex-direction: column; }
-    .accordion-content { flex: 1; overflow-y: auto; }
+    .arrow { display: none; }
+    .accordion-header { cursor: default; }
 }
