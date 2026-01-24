@@ -3,8 +3,6 @@ data/*.csv
 data/*.xlsx
 
 # 설정 및 환경 변수 파일 제외
-config/config.json
-.env
 
 # 라이브러리 폴더 제외
 node_modules/

@@ -40,15 +40,27 @@ function syncUsers() {
 
             if (parts.length < 3) return;
 
-            // DB 저장
-            const sql = `
-                INSERT INTO users (student_id, name, password) 
-                VALUES (?, ?, ?) 
-                ON DUPLICATE KEY UPDATE name = VALUES(name), password = VALUES(password)
-            `;
-            db.query(sql, [id, name, pwd], (err) => {
-                if (!err) successCount++;
+           // ---------------------------------------------------------
+            // 🔥 [수정] Primary Key 설정 여부와 상관없이 무조건 덮어쓰는 쿼리
+            // ---------------------------------------------------------
+            const sql = `UPDATE users SET name = ? WHERE student_id = ?`;
+
+            db.query(sql, [name, id], (err, result) => {
+                if (err) {
+                    console.error(`❌ [에러] ${id} 처리 중 DB 오류:`, err.message);
+                } else if (result.affectedRows === 0) {
+                    // UPDATE가 안 됐다는 건 없는 사람이란 뜻 -> INSERT 시도
+                    const insertSql = `INSERT INTO users (student_id, name, password) VALUES (?, ?, ?)`;
+                    db.query(insertSql, [id, name, pwd], () => {
+                        // console.log(`✨ [신규] ${id} 신규 추가됨`);
+                    });
+                } else {
+                    // 변경된 줄(Rows)이 1개 이상이면 성공
+                    successCount++;
+                    // console.log(`✅ [수정] ${id} -> ${name} 변경됨`);
+                }
             });
+            // ---------------------------------------------------------
         });
 
         setTimeout(() => {
