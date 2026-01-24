@@ -1,4 +1,4 @@
-const CACHE_NAME = 'uos-smash-v20260116-FINAL-FIX'; // 버전을 확실하게 바꿈
+const CACHE_NAME = 'uos-smash-v20260124-EMERGENCY-V2';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
