@@ -42,11 +42,23 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// 3. 요청 가로채기 (Fetch): 캐시 우선, 없으면 네트워크
+// 3. 요청 가로채기 (Fetch)
 self.addEventListener('fetch', (event) => {
+  // 1️⃣ API 요청(/api/)인 경우: 무조건 네트워크로 직행 + 캐시 끄기
+  if (event.request.url.includes('/api/')) {
+    event.respondWith(
+      fetch(event.request, { cache: 'no-store' }) // 🔥 핵심: 브라우저 캐시도 쓰지 마라!
+        .catch(() => {
+          // 혹시 서버 죽었으면 에러 처리
+          return new Response(JSON.stringify({ error: 'Network Error' })); 
+        })
+    );
+    return; // 여기서 끝냄
+  }
+
+  // 2️⃣ 나머지 파일(HTML, CSS 등): 캐시 우선 전략 (기존 로직 유지)
   event.respondWith(
     caches.match(event.request).then((response) => {
-      // 캐시에 있으면 그거 주고, 없으면 서버 가서 가져와라
       return response || fetch(event.request);
     })
   );

@@ -83,6 +83,11 @@ router.post('/cancel', async (req, res) => {
 
 // 3. 현황 조회 (기존 유지)
 router.get('/status', (req, res) => {
+// 🔥 [긴급 추가] "절대 캐시하지 마!" 헤더 설정
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+
     const day = req.query.day || 'WED';
     const sql = `
         SELECT a.category, u.name as user_name, a.guest_name, a.student_id, a.created_at 
