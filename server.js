@@ -18,6 +18,15 @@ const apiRoutes = require('./routes/api');    // 신청, 취소, 현황 등 실�
 const app = express();                        // Express 애플리케이션 객체 생성 (서버의 본체)
 const port = 3000;                            // 서버가 손님을 맞이할 문 번호 (포트 번호) 설정
 
+// 🔥 [긴급 추가] 서비스 워커 파일은 절대 브라우저가 저장하지 못하게 막음 (매번 새 버전 확인)
+app.get('/service-worker.js', (req, res) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    // 실제 파일 보내주기
+    res.sendFile(path.join(__dirname, 'public', 'service-worker.js'));
+});
+
 // ---------------------------------------------------------
 // 3. 미들웨어 및 정적 파일 경로 설정
 // ---------------------------------------------------------
