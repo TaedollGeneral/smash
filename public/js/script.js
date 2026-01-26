@@ -153,8 +153,54 @@ function selectDay(day, btnElement) {
  */
 function toggleAccordion(panelId) {
     const panel = document.getElementById(panelId);
+    // 1. 클래스 토글 (접었다 폈다)
     panel.classList.toggle('collapsed');
+
+    // 2. 모바일일 때만 비율 재계산 (PC는 영향 안 받음)
+    if (window.innerWidth <= 768) {
+        adjustMobileLayout();
+    }
 }
+
+/**
+ * [신규] 모바일 패널 비율 계산기 (심판)
+ * 규칙:
+ * - 3개 다 오픈 -> 운동(2) : 게스트(1) : 레슨(1)
+ * - 그 외(2개 or 1개) -> 오픈된 것끼리 1 : 1
+ */
+function adjustMobileLayout() {
+    const exPanel = document.getElementById('exercise-panel');
+    const guestPanel = document.getElementById('guest-panel');
+    const lessonPanel = document.getElementById('lesson-panel');
+
+    // 누가 펴져있는지 확인 (collapsed 클래스가 없으면 펴진 것)
+    const isExOpen = !exPanel.classList.contains('collapsed');
+    const isGuestOpen = !guestPanel.classList.contains('collapsed');
+    const isLessonOpen = (currentDay !== 'FRI') && !lessonPanel.classList.contains('collapsed');
+
+    // 3개가 전부 펴져있는 경우 (2:1:1)
+    if (isExOpen && isGuestOpen && isLessonOpen) {
+        exPanel.style.flex = "2";
+        guestPanel.style.flex = "1";
+        lessonPanel.style.flex = "1";
+    } 
+    // 그 외 (2개만 펴졌거나, 1개만 펴진 경우 -> 1:1 or 독차지)
+    else {
+        // 펴진 놈은 flex: 1, 접힌 놈은 CSS(!important)가 알아서 50px로 만듦
+        // 따라서 스타일을 초기화("")해주면 CSS 기본값(flex: 1)이 적용됨
+        exPanel.style.flex = "";
+        guestPanel.style.flex = "";
+        lessonPanel.style.flex = "";
+    }
+}
+
+// [추가] 화면 로딩 시나 리사이즈 시에도 비율 계산 실행
+window.addEventListener('resize', () => {
+    if (window.innerWidth <= 768) adjustMobileLayout();
+});
+document.addEventListener('DOMContentLoaded', () => {
+    if (window.innerWidth <= 768) adjustMobileLayout();
+});
 
 function toggleGuestInput() {
     const isGuest = els.catSelect.value === 'guest';
