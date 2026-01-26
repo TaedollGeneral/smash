@@ -130,51 +130,56 @@ select { padding: 6px; border-radius: 4px; }
 #admin-time-modal { z-index: 20000 !important; }
 
 /* -----------------------------------------------------------
-   8. 반응형 (모바일) - 아코디언 "꽉 찬 화면" 수정 버전
+   8. 반응형 (모바일) - 디자인 복구 & 꽉 찬 화면 최종 fix
    ----------------------------------------------------------- */
 @media (max-width: 768px) {
-    /* 대시보드 전체를 세로(Column)로 배치 */
+    /* 전체 레이아웃: 세로 배치 + 카드 사이 간격(10px) 유지 */
     .dashboard-area {
         display: flex;
         flex-direction: column;
-        gap: 0; /* 아코디언 사이 틈 없애기 (깔끔하게) */
-        overflow: hidden; /* 대시보드 자체 스크롤 방지 */
+        gap: 10px;        /* 카드 사이 간격 복구 */
+        overflow: hidden; /* 전체 스크롤 방지 */
     }
     
-    /* 패널 기본 설정 (높이 제한 해제) */
-    .left-panel, .sub-panel {
+    /* 패널 공통 (디자인 복구!) */
+    .left-panel, .sub-panel, #lesson-panel {
         width: 100%;
-        border-radius: 0; /* 모바일에서 둥근 모서리 제거 (선택사항) */
-        border-left: none; border-right: none; /* 양옆 테두리 제거 */
-        transition: flex 0.3s ease; /* 부드러운 애니메이션 */
+        background-color: white;
+        border-radius: 10px; /* 둥근 모서리 복구 */
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* 그림자 복구 */
+        border: 1px solid #ddd;
+        
+        /* 확장 애니메이션 */
+        display: flex;
+        flex-direction: column;
+        transition: flex 0.3s ease;
+        
+        /* 🔥 [핵심] 기본적으로 "남은 공간 전부" 차지 (펼쳐짐 상태) */
+        flex: 1; 
+        min-height: 0;
+        overflow: hidden; 
     }
 
-    /* 🔥 [핵심] 펼쳐진 놈은 남은 공간 "전부" 차지 (flex: 1) */
-    .accordion-item:not(.collapsed) {
-        flex: 1; 
-        display: flex; 
-        flex-direction: column;
-        overflow: hidden; /* 내부 스크롤을 위해 필수 */
-        min-height: 0;    /* Flexbox 버그 방지 */
-    }
-    
-    /* 🔒 [핵심] 접힌 놈은 "헤더 높이(50px)" 만큼만 고정 */
-    .accordion-item.collapsed {
+    /* 🔒 [핵심] 접힌 패널은 "헤더 높이(50px)"로 강제 축소 */
+    .left-panel.collapsed, .sub-panel.collapsed, #lesson-panel.collapsed {
         flex: 0 0 50px; 
         height: 50px;
+        min-height: 50px;
         overflow: hidden;
     }
     
-    /* 내용물 영역 (여기가 스크롤 되어야 함) */
+    /* 내용물 영역 (스크롤 가능) */
     .accordion-content {
-        display: block;
         flex: 1;          /* 부모 높이만큼 꽉 차게 */
         overflow-y: auto; /* 내용 넘치면 스크롤 */
         background: white;
+        display: block;
     }
 
-    /* 접혔을 때 내용물 숨기기 (더 확실하게) */
-    .accordion-item.collapsed .accordion-content {
+    /* 접혔을 때 내용물 확실히 숨김 */
+    .left-panel.collapsed .accordion-content, 
+    .sub-panel.collapsed .accordion-content,
+    #lesson-panel.collapsed .accordion-content {
         display: none;
     }
     
@@ -184,14 +189,18 @@ select { padding: 6px; border-radius: 4px; }
         border-right: 2px solid #aaa; border-bottom: 2px solid #aaa;
         margin-left: 10px; transform: rotate(225deg); transition: 0.3s;
     }
-    .accordion-item.collapsed .arrow { transform: rotate(45deg); }
+    .left-panel.collapsed .arrow, 
+    .sub-panel.collapsed .arrow,
+    #lesson-panel.collapsed .arrow { 
+        transform: rotate(45deg); 
+    }
     
-    /* 하단 컨트롤 패널 배치 수정 */
+    /* 하단 컨트롤 패널 */
     .control-panel { flex-direction: column; align-items: stretch; gap: 10px; }
     .input-group:nth-child(1) { display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 5px; }
     .input-group.mobile-row-2 { display: flex; justify-content: space-between; }
 }
-@media (min-width: 769px) {
+    @media (min-width: 769px) {
     .arrow { display: none; }
     .accordion-header { cursor: default; }
     .dashboard-area { overflow: hidden; }
