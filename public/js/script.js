@@ -147,16 +147,14 @@ function selectDay(day, btnElement) {
     updateTimerUI(); // UI 즉시 갱신 (패널 숨김 적용)
 }
 
-/**
- * [수정] 아코디언 토글 로직 수정 (active -> collapsed)
- * CSS에서 .collapsed 클래스를 사용하므로 이에 맞춤
- */
+/* -----------------------------------------------------------
+   [수정] 아코디언 토글 + 비율 자동 계산 로직
+   ----------------------------------------------------------- */
 function toggleAccordion(panelId) {
     const panel = document.getElementById(panelId);
-    // 1. 클래스 토글 (접었다 폈다)
     panel.classList.toggle('collapsed');
 
-    // 2. 모바일일 때만 비율 재계산 (PC는 영향 안 받음)
+    // 모바일일 때만 비율 재계산 실행
     if (window.innerWidth <= 768) {
         adjustMobileLayout();
     }
@@ -164,43 +162,51 @@ function toggleAccordion(panelId) {
 
 /**
  * [신규] 모바일 패널 비율 계산기 (심판)
- * 규칙:
- * - 3개 다 오픈 -> 운동(2) : 게스트(1) : 레슨(1)
- * - 그 외(2개 or 1개) -> 오픈된 것끼리 1 : 1
+ * 역할: 펼쳐진 패널 개수에 따라 flex 비율을 공정하게 분배함
  */
 function adjustMobileLayout() {
     const exPanel = document.getElementById('exercise-panel');
     const guestPanel = document.getElementById('guest-panel');
     const lessonPanel = document.getElementById('lesson-panel');
 
-    // 누가 펴져있는지 확인 (collapsed 클래스가 없으면 펴진 것)
+    // 1. 누가 펴져 있는지 확인
     const isExOpen = !exPanel.classList.contains('collapsed');
     const isGuestOpen = !guestPanel.classList.contains('collapsed');
-    const isLessonOpen = (currentDay !== 'FRI') && !lessonPanel.classList.contains('collapsed');
+    
+    // 금요일엔 레슨 패널이 아예 없거나 숨겨져 있으므로 "닫힘"으로 간주
+    const isLessonOpen = (currentDay !== 'FRI') && 
+                         lessonPanel && 
+                         !lessonPanel.classList.contains('collapsed') && 
+                         lessonPanel.style.display !== 'none';
 
-    // 3개가 전부 펴져있는 경우 (2:1:1)
-    if (isExOpen && isGuestOpen && isLessonOpen) {
-        exPanel.style.flex = "2";
+    // 2. 펼쳐진 패널 개수 카운트
+    let openCount = 0;
+    if (isExOpen) openCount++;
+    if (isGuestOpen) openCount++;
+    if (isLessonOpen) openCount++;
+
+    // 3. 비율 배분 로직
+    if (openCount === 3) {
+        // [3개 다 오픈] 운동을 조금 더 크게 (1.5배), 나머지는 1배
+        // 이렇게 하면 게스트/레슨도 최소한의 공간을 확보해서 명단이 보입니다.
+        exPanel.style.flex = "1.5";
         guestPanel.style.flex = "1";
         lessonPanel.style.flex = "1";
-    } 
-    // 그 외 (2개만 펴졌거나, 1개만 펴진 경우 -> 1:1 or 독차지)
-    else {
-        // 펴진 놈은 flex: 1, 접힌 놈은 CSS(!important)가 알아서 50px로 만듦
-        // 따라서 스타일을 초기화("")해주면 CSS 기본값(flex: 1)이 적용됨
-        exPanel.style.flex = "";
-        guestPanel.style.flex = "";
-        lessonPanel.style.flex = "";
+    } else {
+        // [1개 또는 2개 오픈] 공평하게 1:1로 나눠 가짐 (또는 독차지)
+        exPanel.style.flex = "1";
+        guestPanel.style.flex = "1";
+        if(lessonPanel) lessonPanel.style.flex = "1";
     }
 }
 
-// [추가] 화면 로딩 시나 리사이즈 시에도 비율 계산 실행
+// [필수] 화면 리사이즈나 로딩 시에도 비율 계산
 window.addEventListener('resize', () => {
     if (window.innerWidth <= 768) adjustMobileLayout();
 });
-document.addEventListener('DOMContentLoaded', () => {
-    if (window.innerWidth <= 768) adjustMobileLayout();
-});
+// DOMContentLoaded 이벤트 안에도 추가해주세요 (기존 리스너 안에 넣으면 됨)
+// fetchSystemInfo() 호출하는 곳 근처에 adjustMobileLayout() 추가
+
 
 function toggleGuestInput() {
     const isGuest = els.catSelect.value === 'guest';
