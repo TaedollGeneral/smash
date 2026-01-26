@@ -223,8 +223,13 @@ function formatDateShort(isoStr) {
     if (!isoStr) return '-';
     const d = new Date(isoStr);
     
-    // 예: 1/20 09:05:07 (시간도 09로 표시됨)
-    return `${d.getMonth()+1}/${d.getDate()} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}`;
+    // 밀리초 가져오기 (예: 123 -> "12")
+    // 앞의 2자리만 사용
+    const ms = d.getMilliseconds().toString().padStart(3, '0').slice(0, 2);
+
+    // 반환 포맷: 월/일 시:분:초.소수점
+    return `${d.getMonth()+1}/${d.getDate()} ${d.getHours().toString().padStart(2, '0')}
+        :${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}.${ms}`;
 }
 
 async function submitForm() {

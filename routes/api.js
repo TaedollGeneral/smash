@@ -90,11 +90,11 @@ router.get('/status', (req, res) => {
 
     const day = req.query.day || 'WED';
     const sql = `
-        SELECT a.category, u.name as user_name, a.guest_name, a.student_id, a.created_at 
+        SELECT a.category, u.name as user_name, a.guest_name, a.student_id, a.created_at, a.id 
         FROM applications a
         JOIN users u ON a.student_id = u.student_id
         WHERE a.day = ? 
-        ORDER BY a.created_at ASC
+        ORDER BY a.created_at ASC, a.id ASC
     `;
     db.query(sql, [day], (err, results) => {
         if (err) res.status(500).send('DB Error');
