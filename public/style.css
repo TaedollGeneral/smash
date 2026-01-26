@@ -129,19 +129,56 @@ select { padding: 6px; border-radius: 4px; }
 /* 시간 수정 모달 우선순위 보정 */
 #admin-time-modal { z-index: 20000 !important; }
 
-/* 8. 반응형 (모바일) */
+/* -----------------------------------------------------------
+   8. 반응형 (모바일) - 아코디언 "꽉 찬 화면" 수정 버전
+   ----------------------------------------------------------- */
 @media (max-width: 768px) {
-    .dashboard-area { flex-direction: column; gap: 5px; }
+    /* 대시보드 전체를 세로(Column)로 배치 */
+    .dashboard-area {
+        display: flex;
+        flex-direction: column;
+        gap: 0; /* 아코디언 사이 틈 없애기 (깔끔하게) */
+        overflow: hidden; /* 대시보드 자체 스크롤 방지 */
+    }
     
-    .left-panel, .sub-panel { height: auto !important; transition: flex 0.3s; }
+    /* 패널 기본 설정 (높이 제한 해제) */
+    .left-panel, .sub-panel {
+        width: 100%;
+        border-radius: 0; /* 모바일에서 둥근 모서리 제거 (선택사항) */
+        border-left: none; border-right: none; /* 양옆 테두리 제거 */
+        transition: flex 0.3s ease; /* 부드러운 애니메이션 */
+    }
+
+    /* 🔥 [핵심] 펼쳐진 놈은 남은 공간 "전부" 차지 (flex: 1) */
+    .accordion-item:not(.collapsed) {
+        flex: 1; 
+        display: flex; 
+        flex-direction: column;
+        overflow: hidden; /* 내부 스크롤을 위해 필수 */
+        min-height: 0;    /* Flexbox 버그 방지 */
+    }
     
-    .accordion-item.collapsed { flex: 0 0 50px; overflow: hidden; }
-    .accordion-item:not(.collapsed) { flex: 1; overflow: hidden; }
+    /* 🔒 [핵심] 접힌 놈은 "헤더 높이(50px)" 만큼만 고정 */
+    .accordion-item.collapsed {
+        flex: 0 0 50px; 
+        height: 50px;
+        overflow: hidden;
+    }
     
-    /* 열렸을 때만 내용 보임 */
-    .accordion-content { display: block; overflow-y: auto; }
-    .accordion-item.collapsed .accordion-content { display: none; }
+    /* 내용물 영역 (여기가 스크롤 되어야 함) */
+    .accordion-content {
+        display: block;
+        flex: 1;          /* 부모 높이만큼 꽉 차게 */
+        overflow-y: auto; /* 내용 넘치면 스크롤 */
+        background: white;
+    }
+
+    /* 접혔을 때 내용물 숨기기 (더 확실하게) */
+    .accordion-item.collapsed .accordion-content {
+        display: none;
+    }
     
+    /* 화살표 아이콘 (기존 유지) */
     .arrow {
         display: inline-block; width: 8px; height: 8px;
         border-right: 2px solid #aaa; border-bottom: 2px solid #aaa;
@@ -149,11 +186,11 @@ select { padding: 6px; border-radius: 4px; }
     }
     .accordion-item.collapsed .arrow { transform: rotate(45deg); }
     
-    .control-panel { flex-direction: column; align-items: stretch; }
+    /* 하단 컨트롤 패널 배치 수정 */
+    .control-panel { flex-direction: column; align-items: stretch; gap: 10px; }
     .input-group:nth-child(1) { display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 5px; }
     .input-group.mobile-row-2 { display: flex; justify-content: space-between; }
 }
-
 @media (min-width: 769px) {
     .arrow { display: none; }
     .accordion-header { cursor: default; }

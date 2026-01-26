@@ -228,7 +228,7 @@ function formatDateShort(isoStr) {
     const ms = d.getMilliseconds().toString().padStart(3, '0').slice(0, 2);
 
     // 반환 포맷: 월/일 시:분:초.소수점
-    return `$${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}.${ms}`;
+    return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}.${ms}`;
 }
 
 async function submitForm() {
