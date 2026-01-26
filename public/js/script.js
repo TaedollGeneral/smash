@@ -147,63 +147,12 @@ function selectDay(day, btnElement) {
     updateTimerUI(); // UI 즉시 갱신 (패널 숨김 적용)
 }
 
-/* -----------------------------------------------------------
-   [수정] 아코디언 토글 + 비율 자동 계산 로직
-   ----------------------------------------------------------- */
+/* [수정] JS는 이제 클래스만 토글합니다. (비율 계산 삭제) */
 function toggleAccordion(panelId) {
     const panel = document.getElementById(panelId);
     panel.classList.toggle('collapsed');
-
-    // 모바일일 때만 비율 재계산 실행
-    if (window.innerWidth <= 768) {
-        adjustMobileLayout();
-    }
 }
 
-/**
- * [신규] 모바일 패널 비율 계산기 (심판)
- * 역할: 펼쳐진 패널 개수에 따라 flex 비율을 공정하게 분배함
- */
-function adjustMobileLayout() {
-    const exPanel = document.getElementById('exercise-panel');
-    const guestPanel = document.getElementById('guest-panel');
-    const lessonPanel = document.getElementById('lesson-panel');
-
-    // 1. 누가 펴져 있는지 확인
-    const isExOpen = !exPanel.classList.contains('collapsed');
-    const isGuestOpen = !guestPanel.classList.contains('collapsed');
-    
-    // 금요일엔 레슨 패널이 아예 없거나 숨겨져 있으므로 "닫힘"으로 간주
-    const isLessonOpen = (currentDay !== 'FRI') && 
-                         lessonPanel && 
-                         !lessonPanel.classList.contains('collapsed') && 
-                         lessonPanel.style.display !== 'none';
-
-    // 2. 펼쳐진 패널 개수 카운트
-    let openCount = 0;
-    if (isExOpen) openCount++;
-    if (isGuestOpen) openCount++;
-    if (isLessonOpen) openCount++;
-
-    // 3. 비율 배분 로직
-    if (openCount === 3) {
-        // [3개 다 오픈] 운동을 조금 더 크게 (1.5배), 나머지는 1배
-        // 이렇게 하면 게스트/레슨도 최소한의 공간을 확보해서 명단이 보입니다.
-        exPanel.style.flex = "1.5";
-        guestPanel.style.flex = "1";
-        lessonPanel.style.flex = "1";
-    } else {
-        // [1개 또는 2개 오픈] 공평하게 1:1로 나눠 가짐 (또는 독차지)
-        exPanel.style.flex = "1";
-        guestPanel.style.flex = "1";
-        if(lessonPanel) lessonPanel.style.flex = "1";
-    }
-}
-
-// [필수] 화면 리사이즈나 로딩 시에도 비율 계산
-window.addEventListener('resize', () => {
-    if (window.innerWidth <= 768) adjustMobileLayout();
-});
 // DOMContentLoaded 이벤트 안에도 추가해주세요 (기존 리스너 안에 넣으면 됨)
 // fetchSystemInfo() 호출하는 곳 근처에 adjustMobileLayout() 추가
 

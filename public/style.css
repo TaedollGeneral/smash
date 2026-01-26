@@ -141,63 +141,76 @@ select { padding: 6px; border-radius: 4px; }
 /* -----------------------------------------------------------
    8. 반응형 (모바일) - 아코디언 비율/크기 문제 완벽 해결 버전
    ----------------------------------------------------------- */
+/* -----------------------------------------------------------
+   8. 반응형 (모바일) - 최종 클린 버전 (JS 없이 CSS로 완벽 해결)
+   ----------------------------------------------------------- */
 @media (max-width: 768px) {
-    /* 1. 대시보드 전체 틀: 화면 꽉 채우기 필수 설정 */
+    /* 1. 전체 틀: 남은 공간 무조건 꽉 채우기 */
     .dashboard-area {
         display: flex;
         flex-direction: column;
-        gap: 10px;        /* 카드 사이 간격 */
-        flex: 1;          /* 남은 높이 무조건 다 차지 */
-        min-height: 0;    /* 자식 스크롤을 위해 필수 */
-        overflow: hidden; /* 전체 스크롤 방지 */
+        gap: 10px;
+        flex: 1;          /* 화면 바닥까지 늘어남 */
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    /* 🔥 [핵심 추가] 중간에 껴있는 래퍼 박스를 "없는 셈" 칩니다 */
+    /* 이걸 넣어야 운동 패널이 방해 없이 바닥까지 내려갑니다 */
+    .right-panel-wrapper {
+        display: contents; 
     }
     
     /* 2. 패널 공통 (펼쳐졌을 때) */
     .left-panel, .sub-panel, #lesson-panel {
-        width: 100%;
         display: flex;
         flex-direction: column;
-        
-        /* 🔥 [핵심 수정] height: auto 절대 금지! */
-        /* JS가 부여할 flex 비율에 따라 유동적으로 늘어납니다 */
-        flex: 1; 
-        
-        /* 디자인 유지 */
         background-color: white;
         border-radius: 10px;
         box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         border: 1px solid #ddd;
-        
         transition: flex 0.3s ease; /* 부드럽게 늘어나기 */
-        min-height: 0; /* 내용 많아도 패널이 뚫고 나가지 않게 함 */
+        min-height: 0;
+        
+        /* 🔥 [핵심] 
+           1. height: auto 삭제 (범인 제거)
+           2. 기본 flex: 1 (남은 공간 차지) 
+        */
+        flex: 1; 
     }
 
-    /* 3. 접혔을 때 (무조건 50px 고정) */
+    /* 3. 🔥 운동 패널 우대 정책 (항상 1.5배 더 크게) */
+    /* 운동(1.5) : 게스트(1) : 레슨(1) 비율 자동 적용됨 */
+    .left-panel:not(.collapsed) {
+        flex: 1.5; 
+    }
+
+    /* 4. 접혔을 때 (무조건 50px 고정) */
     .left-panel.collapsed, 
     .sub-panel.collapsed, 
     #lesson-panel.collapsed {
-        flex: 0 0 50px !important;   /* 크기 고정 */
-        height: 50px !important;     /* 높이 강제 */
-        min-height: 50px !important; /* 최소 높이 */
-        overflow: hidden !important; /* 내용물 숨김 */
+        flex: 0 0 50px !important;   
+        height: 50px !important;     
+        min-height: 50px !important; 
+        overflow: hidden !important; 
     }
     
-    /* 4. 내용물 영역 */
+    /* 5. 내용물 영역 */
     .accordion-content {
         flex: 1;          /* 패널 높이만큼 꽉 채움 */
         overflow-y: auto; /* 내용 넘치면 스크롤 */
-        display: block;   /* 항상 공간 차지 */
-        background: white; /* 배경색 명시 */
+        display: block;   
+        background: white;
     }
 
-    /* 접혔을 때 내용물 확실히 숨김 */
+    /* 접혔을 때 내용물 숨김 */
     .left-panel.collapsed .accordion-content, 
     .sub-panel.collapsed .accordion-content,
     #lesson-panel.collapsed .accordion-content {
         display: none;
     }
     
-    /* 5. 화살표 및 기타 (건드리지 않음) */
+    /* 6. 화살표 및 하단 컨트롤 (기존 유지) */
     .arrow {
         display: inline-block; width: 8px; height: 8px;
         border-right: 2px solid #aaa; border-bottom: 2px solid #aaa;
@@ -211,7 +224,6 @@ select { padding: 6px; border-radius: 4px; }
     .input-group:nth-child(1) { display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 5px; }
     .input-group.mobile-row-2 { display: flex; justify-content: space-between; }
 }
-
 /* [추가] 모던 UI용 간격 벌리기 */
 .mt-2 {
     margin-top: 20px; /* 원하는 만큼 간격 조절 (예: 15px, 20px, 30px) */
